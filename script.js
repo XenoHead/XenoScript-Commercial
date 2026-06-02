@@ -433,14 +433,15 @@ if (mindMapBtn) {
             scenes: [],
             characters: []
         };
-        
         appSettings.mindmapNotes = appSettings.mindmapNotes || {};
         appSettings.characterNotes = appSettings.characterNotes || {};
         
-        const pars = document.querySelectorAll('#editor p');
+        const pars = Array.from(document.querySelectorAll('#editor p'));
         let currentScene = null;
         let sceneCounter = 0;
-        let charNames = [];
+        
+        // Pass 1: Collect scenes and characters
+        const charStats = {};
         
         pars.forEach(p => {
             const text = p.textContent.replace(/\u200B/g, '').trim();
@@ -457,17 +458,39 @@ if (mindMapBtn) {
                 data.scenes.push(currentScene);
             } else if (p.classList.contains('character') && currentScene) {
                 const charName = text.replace(/\(.*?\)/g, '').trim();
-                if (charName && !currentScene.characters.includes(charName)) {
-                    currentScene.characters.push(charName);
-                }
-                if (charName && !charNames.includes(charName)) {
-                    charNames.push(charName);
+                if (charName) {
+                    if (!currentScene.characters.includes(charName)) {
+                        currentScene.characters.push(charName);
+                    }
+                    if (!charStats[charName]) {
+                        charStats[charName] = { scenes: new Set(), dialogueCount: 0, intro: '' };
+                    }
+                    charStats[charName].scenes.add(sceneCounter);
+                    charStats[charName].dialogueCount++;
                 }
             }
         });
-        
+
+        // Pass 2: Find character introductions in action lines
+        const charNames = Object.keys(charStats);
+        pars.forEach(p => {
+            if (p.classList.contains('action')) {
+                const text = p.textContent.replace(/\u200B/g, '').trim();
+                charNames.forEach(name => {
+                    // Check if name is fully capitalized in this action block
+                    const regex = new RegExp(`\\b${name}\\b(?:\\s*\\(.*?\\))?`, 'g');
+                    if (!charStats[name].intro && text.match(regex) && text.includes(name.toUpperCase())) {
+                        charStats[name].intro = text; // First mention in action is usually the intro
+                    }
+                });
+            }
+        });
+
         data.characters = charNames.map(name => ({
             name: name,
+            scenes: Array.from(charStats[name].scenes),
+            dialogueCount: charStats[name].dialogueCount,
+            intro: charStats[name].intro,
             notes: appSettings.characterNotes[name] || ''
         }));
         

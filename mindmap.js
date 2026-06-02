@@ -103,7 +103,15 @@ function initCharacterBible() {
     
     scriptData.characters.forEach((char) => {
         const titleText = char.name;
-        const card = createCard(titleText, 'Profile / Traits', x, y, false, char.notes, 'character', char.name);
+        
+        let autoStats = `<strong>Scenes In:</strong> ${char.scenes.join(', ')}<br>`;
+        autoStats += `<strong>Dialogue Blocks:</strong> ${char.dialogueCount}<br>`;
+        if (char.intro) {
+            autoStats += `<br><strong>Script Intro:</strong> <em>"${char.intro}"</em>`;
+        }
+        
+        const card = createCard(titleText, '', x, y, false, char.notes, 'character', char.name);
+        card.querySelector('.card-body').innerHTML = autoStats;
         card.classList.add('character-card');
         canvas.appendChild(card);
         
