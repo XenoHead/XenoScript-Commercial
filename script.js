@@ -4044,6 +4044,11 @@ function openCheckFormat() {
             `<strong style="color:#3b82f6;">${infos} note${infos !== 1 ? 's' : ''}</strong>.`;
     }
 
+    const counterEl = document.getElementById('check-format-issue-counter');
+    if (counterEl) {
+        counterEl.textContent = issues.length === 0 ? '' : `${issues.length} issue${issues.length !== 1 ? 's' : ''}`;
+    }
+
     const bodyEl = document.getElementById('check-format-body');
     if (issues.length === 0) {
         bodyEl.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:13px;">Nothing to report.</div>`;
@@ -4054,7 +4059,7 @@ function openCheckFormat() {
                 <div style="flex:1; min-width:0;">
                     <div style="display:flex; gap:8px; align-items:baseline; flex-wrap:wrap;">
                         <span style="font-size:12px; font-weight:bold; color:${severityStyle[issue.severity]};">${issue.rule}</span>
-                        <a href="#" onclick="scrollToLine(${issue.lineNum}); document.getElementById('check-format-modal').style.display='none'; return false;"
+                        <a href="#" onclick="scrollToLine(${issue.lineNum}); return false;"
                            style="font-size:11px; color:#3b82f6; text-decoration:underline; flex-shrink:0;">Line #${issue.lineNum}</a>
                     </div>
                     <div style="font-size:12px; color:var(--text-muted); margin-top:2px; word-break:break-word;">${issue.detail}</div>
@@ -4069,4 +4074,33 @@ function openCheckFormat() {
 document.getElementById('btn-close-check-format').addEventListener('click', () => {
     document.getElementById('check-format-modal').style.display = 'none';
 });
+
+// --- Draggable Check Formatting Panel ---
+const checkFormatContent = document.getElementById('check-format-content');
+const checkFormatHeader  = document.getElementById('check-format-header');
+
+let isCheckFormatDragging = false;
+let cfDragOffsetX = 0, cfDragOffsetY = 0;
+
+if (checkFormatHeader && checkFormatContent) {
+    checkFormatHeader.addEventListener('mousedown', (e) => {
+        isCheckFormatDragging = true;
+        const rect = checkFormatContent.getBoundingClientRect();
+        cfDragOffsetX = e.clientX - rect.left;
+        cfDragOffsetY = e.clientY - rect.top;
+        checkFormatContent.style.right = 'auto';
+        checkFormatContent.style.bottom = 'auto';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (isCheckFormatDragging) {
+            checkFormatContent.style.left = (e.clientX - cfDragOffsetX) + 'px';
+            checkFormatContent.style.top  = (e.clientY - cfDragOffsetY) + 'px';
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        isCheckFormatDragging = false;
+    });
+}
 
