@@ -82,7 +82,20 @@
                 <div class="dropdown-item" id="edit-page-break"><span>Insert Page Break</span><span class="hotkey-text" data-hotkey-display="page-break">Ctrl-Enter</span></div>
             </div>
         </div>
-        <div class="menu-item">Format</div>
+        <div class="menu-item dropdown" id="format-menu">Format
+            <div class="dropdown-content">
+                <div class="dropdown-item" onclick="setLineType('scene-heading')"><span>🖼️ Scene Heading</span><span class="hotkey-text" data-hotkey-display="scene-heading">Ctrl-1</span></div>
+                <div class="dropdown-item" onclick="setLineType('action')"><span>📢 Action</span><span class="hotkey-text" data-hotkey-display="action">Ctrl-2</span></div>
+                <div class="dropdown-item" onclick="setLineType('character')"><span>👤 Character</span><span class="hotkey-text" data-hotkey-display="character">Ctrl-3</span></div>
+                <div class="dropdown-item" onclick="setLineType('dialogue')"><span>💬 Dialogue</span><span class="hotkey-text" data-hotkey-display="dialogue">Ctrl-5</span></div>
+                <div class="dropdown-item" onclick="setLineType('parenthetical')"><span>() Parenthetical</span><span class="hotkey-text" data-hotkey-display="parenthetical">Ctrl-4</span></div>
+                <div class="dropdown-item" onclick="setLineType('dual')"><span>🗣 Dual Dialogue</span><span class="hotkey-text">Ctrl-D</span></div>
+                <div class="dropdown-item" onclick="setLineType('shot')"><span>📹 Shot</span><span class="hotkey-text" data-hotkey-display="shot">Ctrl-7</span></div>
+                <div class="dropdown-item" onclick="setLineType('transition')"><span>⇄ Transition</span><span class="hotkey-text" data-hotkey-display="transition">Ctrl-6</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="toggleCase()"><span>Aa Toggle Case</span><span class="hotkey-text" data-hotkey-display="toggle-case">Ctrl-Shift-U</span></div>
+            </div>
+        </div>
         <div class="menu-item dropdown" id="view-menu">View
             <div class="dropdown-content">
                 <div class="dropdown-item" id="view-toggle-focus"><span><span id="focus-mode-check" style="visibility:hidden; margin-right:6px;">✔</span>Toggle Focus Mode</span><span class="hotkey-text" data-hotkey-display="focus-mode">F11</span></div>
