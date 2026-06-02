@@ -883,22 +883,48 @@ del "%~f0"
         return None
 
 if __name__ == '__main__':
-    api = BackendAPI()
-    
-    if getattr(sys, 'frozen', False):
-        current_dir = sys._MEIPASS
-    else:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
+    try:
+        import traceback
+        api = BackendAPI()
         
-    html_path = os.path.join(current_dir, 'index.html')
-    
-    version_info = api.get_version_info()
-    version_str = version_info.get("version", "2.5")
-    
-    active_window = webview.create_window(f'ReelScript {version_str}', url=html_path, js_api=api, width=1280, height=800)
+        if getattr(sys, 'frozen', False):
+            current_dir = sys._MEIPASS
+        else:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            
+        html_path = os.path.join(current_dir, 'index.html')
+        
+        version_info = api.get_version_info()
+        version_str = version_info.get("version", "2.5")
+        
+        active_window = webview.create_window(f'ReelScript {version_str}', url=html_path, js_api=api, width=1280, height=800)
 
-    icon_path = os.path.join(current_dir, 'movie-icon.png')
-    if os.path.exists(icon_path):
-        webview.start(icon=icon_path)
-    else:
-        webview.start()
+        icon_path = os.path.join(current_dir, 'movie-icon.ico')
+        if os.path.exists(icon_path):
+            webview.start(icon=icon_path, debug=False)
+        else:
+            webview.start(debug=False)
+    except Exception as e:
+        import traceback
+        try:
+            # Try to write to the user's Documents folder
+            docs_dir = os.path.join(os.path.expanduser("~"), "Documents", "ReelScript")
+            if not os.path.exists(docs_dir):
+                os.makedirs(docs_dir)
+            crash_file = os.path.join(docs_dir, "crash_log.txt")
+            with open(crash_file, "a", encoding="utf-8") as f:
+                f.write(f"\n--- Crash on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+                f.write(traceback.format_exc())
+        except:
+            # Fallback to current directory if Documents fails
+            with open("reelscript_crash_log.txt", "a", encoding="utf-8") as f:
+                f.write(f"\n--- Crash on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+                f.write(traceback.format_exc())
+        
+        # Also try to show an OS-level error message box
+        try:
+            import ctypes
+            ctypes.windll.user32.MessageBoxW(0, f"ReelScript encountered a fatal error and failed to start.\n\nA crash log has been saved to your Documents/ReelScript folder.\n\nError: {str(e)}", "ReelScript Error", 0x10)
+        except:
+            pass
+        sys.exit(1)
