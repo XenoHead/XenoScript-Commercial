@@ -14,10 +14,10 @@ section, to ensure smooth file sharing.
 ========================================================================
 
 1. INSTALLING THE APP:
-   - Right-click the "install.bat" file and select "Run as Administrator".
-   - This is required so Windows can associate the new ".rsp" (ReelScript 
-     Project) files with the application.
-   - Once installed, you will find a ReelScript shortcut on your Desktop.
+   - Download "ReelScript_Setup.exe" and double-click to run the installer.
+   - Follow the simple setup wizard. The installer will automatically associate 
+     ".rsp" (ReelScript Project) files with the application.
+   - Once installed, you will find a ReelScript shortcut on your Desktop and Start Menu.
 
 2. SET UP YOUR AUTHOR PROFILE (CRUCIAL):
    Before you start editing, you need to tell ReelScript who you are so 
