@@ -382,9 +382,9 @@ let appSettings = {
     authorName: 'Writer',
     authorColor: '#ef4444',
     recentProjects: [],
-    projectName: 'Quiet Hours 4th Draft',
+    projectName: 'Untitled Project',
     currentProjectFile: null,
-    sharedFolderLink: 'https://drive.google.com/drive/folders/1QCxirCdxxKAoazFJ3wP4L_LbJcwKqPWT?usp=sharing',
+    sharedFolderLink: '',
     geminiApiKey: '',
     isRevisionMode: false,
     isFocusMode: false,
@@ -2494,7 +2494,11 @@ if (changelogModal) {
 }
 
 document.getElementById('share-gdrive').addEventListener('click', () => {
-    const link = appSettings.sharedFolderLink || 'https://drive.google.com/drive/folders/1QCxirCdxxKAoazFJ3wP4L_LbJcwKqPWT?usp=sharing';
+    const link = appSettings.sharedFolderLink;
+    if (!link) {
+        alert("No shared folder link configured.\n\nGo to Share → Configure Shared Folder to set one.");
+        return;
+    }
     if (window.pywebview) {
         window.pywebview.api.open_url(link);
     } else {
