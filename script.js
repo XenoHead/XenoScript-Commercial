@@ -1288,11 +1288,24 @@ editor.addEventListener('input', () => {
             const p = getCurrentParagraph();
             if (p) {
                 const lineType = getLineType(p);
+                const startOffset = range.startOffset;
+                const textBefore = node.nodeValue.substring(0, startOffset);
+                
+                // Force all typed letters to uppercase in backbone for these blocks
+                if (lineType === 'character' || lineType === 'scene-heading' || lineType === 'transition') {
+                    const match = textBefore.match(/([a-z])$/);
+                    if (match) {
+                        const upperChar = match[1].toUpperCase();
+                        isAutoCapitalizing = true;
+                        document.execCommand('delete', false, null);
+                        document.execCommand('insertText', false, upperChar);
+                        isAutoCapitalizing = false;
+                    }
+                    return;
+                }
+
                 // Only auto-capitalize Action and Dialogue lines (others are CSS uppercase by default)
                 if (lineType === 'action' || lineType === 'dialogue') {
-                    const startOffset = range.startOffset;
-                    const textBefore = node.nodeValue.substring(0, startOffset);
-
                     // Match lowercase letters at the start of a paragraph or after punctuation + spaces
                     const match = textBefore.match(/(?:^|[\u200B.!?]\s+['"]?|\u200B['"]?)([a-z])$/);
                     if (match) {
@@ -3431,6 +3444,14 @@ document.getElementById('tools-check-spelling').addEventListener('click', async 
     }
     syncDot.style.backgroundColor = '#f59e0b';
     syncText.textContent = "Checking document...";
+
+    // Force backbone caps before checking
+    const cappedBlocks = editor.querySelectorAll('p.character, p.scene-heading, p.transition');
+    cappedBlocks.forEach(p => {
+        if (p.textContent !== p.textContent.toUpperCase()) {
+            p.textContent = p.textContent.toUpperCase();
+        }
+    });
 
     const text = editor.innerText;
     const result = await window.pywebview.api.check_document_spelling(text);
