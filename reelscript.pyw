@@ -622,6 +622,14 @@ print(file)
             return "OK"
         except Exception as e:
             return f"Error: {str(e)}"
+            
+    def update_mindmap_note(self, scene_id, note_content):
+        global active_window
+        import json
+        escaped_content = json.dumps(note_content)
+        if active_window:
+            active_window.evaluate_js(f"if(window.updateMindmapNote) window.updateMindmapNote('{scene_id}', {escaped_content});")
+        return "OK"
 
     def load_latest_cloud(self, cloud_dir, project_name):
         if not cloud_dir or not os.path.exists(cloud_dir):

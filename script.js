@@ -434,15 +434,24 @@ if (mindMapBtn) {
             characters: []
         };
         
+        appSettings.mindmapNotes = appSettings.mindmapNotes || {};
+        
         const pars = document.querySelectorAll('#editor p');
         let currentScene = null;
+        let sceneCounter = 0;
         
         pars.forEach(p => {
             const text = p.textContent.replace(/\u200B/g, '').trim();
             if (!text) return;
             
             if (p.classList.contains('scene-heading')) {
-                currentScene = { name: text, characters: [] };
+                sceneCounter++;
+                currentScene = { 
+                    id: sceneCounter, 
+                    name: text, 
+                    characters: [],
+                    notes: appSettings.mindmapNotes[sceneCounter] || ''
+                };
                 data.scenes.push(currentScene);
             } else if (p.classList.contains('character') && currentScene) {
                 const charName = text.replace(/\(.*?\)/g, '').trim();
@@ -4254,3 +4263,9 @@ if (checkFormatHeader && checkFormatContent) {
     });
 }
 
+
+// Global hook for Mind Map secondary window to update notes
+window.updateMindmapNote = function(sceneId, noteContent) {
+    appSettings.mindmapNotes = appSettings.mindmapNotes || {};
+    appSettings.mindmapNotes[sceneId] = noteContent;
+};

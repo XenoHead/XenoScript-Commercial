@@ -156,3 +156,18 @@ body, html {
     outline: none;
     cursor: text;
 }
+
+.card-notes {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(0,0,0,0.2);
+    font-size: 12px;
+    color: #222;
+    min-height: 40px;
+    outline: none;
+    cursor: text;
+}
+.card-notes:empty:before {
+    content: attr(placeholder);
+    color: rgba(0,0,0,0.4);
+}

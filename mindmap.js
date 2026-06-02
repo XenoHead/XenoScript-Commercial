@@ -36,7 +36,8 @@ function initCorkboard() {
     const padding = 220;
     
     scriptData.scenes.forEach((scene, index) => {
-        const card = createCard(scene.name, scene.characters.join(', ') || 'No characters detected.', x, y);
+        const titleText = `Scene ${scene.id}: ${scene.name}`;
+        const card = createCard(titleText, scene.characters.join(', ') || 'No characters detected.', x, y, false, scene.notes, scene.id);
         canvas.appendChild(card);
         
         x += padding;
@@ -114,7 +115,7 @@ document.getElementById('add-sticky-btn').addEventListener('click', () => {
 let activeCard = null;
 let startX, startY, initialX, initialY;
 
-function createCard(titleText, bodyText, x, y, editable = false) {
+function createCard(titleText, bodyText, x, y, editable = false, notesHtml = '', sceneId = null) {
     const card = document.createElement('div');
     card.className = 'card';
     card.style.left = x + 'px';
@@ -132,6 +133,24 @@ function createCard(titleText, bodyText, x, y, editable = false) {
     
     card.appendChild(title);
     card.appendChild(body);
+    
+    // Add notes area for scene cards
+    if (sceneId !== null) {
+        const notes = document.createElement('div');
+        notes.className = 'card-notes';
+        notes.contentEditable = "true";
+        notes.innerHTML = notesHtml || '';
+        notes.setAttribute('placeholder', 'Type notes or synopsis here...');
+        
+        // Sync to python backend on input
+        notes.addEventListener('input', () => {
+            if (window.pywebview) {
+                window.pywebview.api.update_mindmap_note(sceneId, notes.innerHTML);
+            }
+        });
+        
+        card.appendChild(notes);
+    }
     
     card.addEventListener('mousedown', dragStart);
     return card;
