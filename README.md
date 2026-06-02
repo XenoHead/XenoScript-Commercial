@@ -25,13 +25,14 @@
 - One-click **Approve** to accept changes and clean up the script
 - Shareable `.rsp` (ReelScript Project) file format for easy back-and-forth
 
-### 🤖 AI Assistant (Powered by Google Gemini)
+### 🤖 AI Assistant (Powered by Google Gemini - BYOK)
 | Feature | How to Use |
 |---|---|
 | **Suggest** — brainstorm rewrites & ideas | Highlight text → click 💡 Suggest |
-| **AI Auto-Fix** — grammar & flow rewrite | Highlight text → Right-click → ✨ AI Auto-Fix |
+| **AI Auto-Fix** — grammar & flow suggestions | Highlight text → Right-click → ✨ AI Auto-Fix |
 | **Scene Analysis** — pacing, dialogue & format feedback | Right-click a scene → 🎬 AI Check Scene |
 | **Full Script Analysis** — comprehensive developmental edit | Reports → 🤖 AI Script Analysis |
+| **LIMITATIONS** — it will not write for you, only offer ways to improve |
 
 > Line numbers in AI reports are **clickable** — click `Line#45` and the editor jumps straight there.
 
