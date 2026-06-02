@@ -6,14 +6,12 @@
     <title>ReelScript - Mind Map</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="mindmap.css">
-    <!-- vis-network for Character Map -->
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
 <body>
     <div id="sidebar">
         <div class="sidebar-header">Mind Map</div>
         <div class="tab active" data-target="corkboard">Scene Corkboard</div>
-        <div class="tab" data-target="character-map">Character Map</div>
+        <div class="tab" data-target="character-bible">Character Bible</div>
         <div class="tab" data-target="freeform">Freeform Board</div>
     </div>
 
@@ -23,9 +21,9 @@
             <div id="corkboard-canvas"></div>
         </div>
 
-        <!-- Character Map View -->
-        <div id="character-map" class="view">
-            <div id="network-canvas"></div>
+        <!-- Character Bible View -->
+        <div id="character-bible" class="view">
+            <div id="character-bible-canvas"></div>
         </div>
 
         <!-- Freeform Board View -->

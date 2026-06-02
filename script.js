@@ -435,10 +435,12 @@ if (mindMapBtn) {
         };
         
         appSettings.mindmapNotes = appSettings.mindmapNotes || {};
+        appSettings.characterNotes = appSettings.characterNotes || {};
         
         const pars = document.querySelectorAll('#editor p');
         let currentScene = null;
         let sceneCounter = 0;
+        let charNames = [];
         
         pars.forEach(p => {
             const text = p.textContent.replace(/\u200B/g, '').trim();
@@ -458,11 +460,16 @@ if (mindMapBtn) {
                 if (charName && !currentScene.characters.includes(charName)) {
                     currentScene.characters.push(charName);
                 }
-                if (charName && !data.characters.includes(charName)) {
-                    data.characters.push(charName);
+                if (charName && !charNames.includes(charName)) {
+                    charNames.push(charName);
                 }
             }
         });
+        
+        data.characters = charNames.map(name => ({
+            name: name,
+            notes: appSettings.characterNotes[name] || ''
+        }));
         
         await window.pywebview.api.set_mindmap_data(data);
         await window.pywebview.api.open_mindmap_window();
@@ -4268,4 +4275,10 @@ if (checkFormatHeader && checkFormatContent) {
 window.updateMindmapNote = function(sceneId, noteContent) {
     appSettings.mindmapNotes = appSettings.mindmapNotes || {};
     appSettings.mindmapNotes[sceneId] = noteContent;
+};
+
+// Global hook for Character Bible notes
+window.updateCharacterNote = function(charName, noteContent) {
+    appSettings.characterNotes = appSettings.characterNotes || {};
+    appSettings.characterNotes[charName] = noteContent;
 };

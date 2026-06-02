@@ -1,11 +1,10 @@
 let scriptData = { scenes: [], characters: [] };
-let network = null;
 
 window.addEventListener('pywebviewready', async () => {
     try {
         scriptData = await window.pywebview.api.get_mindmap_data();
         initCorkboard();
-        initCharacterMap();
+        initCharacterBible();
     } catch (e) {
         console.error("Failed to load mind map data", e);
     }
@@ -19,10 +18,6 @@ document.querySelectorAll('.tab').forEach(tab => {
         
         tab.classList.add('active');
         document.getElementById(tab.getAttribute('data-target')).classList.add('active');
-        
-        if (tab.getAttribute('data-target') === 'character-map' && network) {
-            network.fit(); // Re-center graph when shown
-        }
     });
 });
 
@@ -37,7 +32,7 @@ function initCorkboard() {
     
     scriptData.scenes.forEach((scene, index) => {
         const titleText = `Scene ${scene.id}: ${scene.name}`;
-        const card = createCard(titleText, scene.characters.join(', ') || 'No characters detected.', x, y, false, scene.notes, scene.id);
+        const card = createCard(titleText, scene.characters.join(', ') || 'No characters detected.', x, y, false, scene.notes, 'scene', scene.id);
         canvas.appendChild(card);
         
         x += padding;
@@ -48,55 +43,27 @@ function initCorkboard() {
     });
 }
 
-// --- Character Map Logic ---
-function initCharacterMap() {
-    if (!window.vis || !scriptData.characters || scriptData.characters.length === 0) return;
+// --- Character Bible Logic ---
+function initCharacterBible() {
+    const canvas = document.getElementById('character-bible-canvas');
+    canvas.innerHTML = '';
     
-    const nodes = [];
-    const edges = [];
-    const edgeMap = {}; // track connections between characters
-
-    scriptData.characters.forEach((char, i) => {
-        nodes.push({ id: i, label: char, shape: 'dot', size: 20, color: '#0078D4', font: { color: 'white' } });
-    });
-
-    scriptData.scenes.forEach(scene => {
-        for (let i = 0; i < scene.characters.length; i++) {
-            for (let j = i + 1; j < scene.characters.length; j++) {
-                const char1 = scriptData.characters.indexOf(scene.characters[i]);
-                const char2 = scriptData.characters.indexOf(scene.characters[j]);
-                
-                if (char1 !== -1 && char2 !== -1) {
-                    const edgeId = char1 < char2 ? `${char1}-${char2}` : `${char2}-${char1}`;
-                    if (!edgeMap[edgeId]) {
-                        edgeMap[edgeId] = 1;
-                    } else {
-                        edgeMap[edgeId]++;
-                    }
-                }
-            }
+    let x = 50;
+    let y = 50;
+    const padding = 220;
+    
+    scriptData.characters.forEach((char) => {
+        const titleText = char.name;
+        const card = createCard(titleText, 'Profile / Traits', x, y, false, char.notes, 'character', char.name);
+        card.classList.add('character-card');
+        canvas.appendChild(card);
+        
+        x += padding;
+        if (x > window.innerWidth - 250) {
+            x = 50;
+            y += 200; // Character cards are taller
         }
     });
-
-    for (const [key, weight] of Object.entries(edgeMap)) {
-        const [from, to] = key.split('-');
-        edges.push({
-            from: parseInt(from),
-            to: parseInt(to),
-            value: weight,
-            color: { color: '#AAAAAA', highlight: '#FFFFFF' }
-        });
-    }
-
-    const container = document.getElementById('network-canvas');
-    const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
-    const options = {
-        physics: {
-            stabilization: true,
-            barnesHut: { springLength: 200 }
-        }
-    };
-    network = new vis.Network(container, data, options);
 }
 
 // --- Freeform Logic ---
@@ -115,7 +82,7 @@ document.getElementById('add-sticky-btn').addEventListener('click', () => {
 let activeCard = null;
 let startX, startY, initialX, initialY;
 
-function createCard(titleText, bodyText, x, y, editable = false, notesHtml = '', sceneId = null) {
+function createCard(titleText, bodyText, x, y, editable = false, notesHtml = '', syncType = null, syncId = null) {
     const card = document.createElement('div');
     card.className = 'card';
     card.style.left = x + 'px';
@@ -134,18 +101,27 @@ function createCard(titleText, bodyText, x, y, editable = false, notesHtml = '',
     card.appendChild(title);
     card.appendChild(body);
     
-    // Add notes area for scene cards
-    if (sceneId !== null) {
+    // Add notes area for scene or character cards
+    if (syncType !== null) {
         const notes = document.createElement('div');
         notes.className = 'card-notes';
         notes.contentEditable = "true";
         notes.innerHTML = notesHtml || '';
-        notes.setAttribute('placeholder', 'Type notes or synopsis here...');
+        
+        if (syncType === 'scene') {
+            notes.setAttribute('placeholder', 'Type notes or synopsis here...');
+        } else if (syncType === 'character') {
+            notes.setAttribute('placeholder', 'Age, Arc, Flaws, etc...');
+        }
         
         // Sync to python backend on input
         notes.addEventListener('input', () => {
             if (window.pywebview) {
-                window.pywebview.api.update_mindmap_note(sceneId, notes.innerHTML);
+                if (syncType === 'scene') {
+                    window.pywebview.api.update_mindmap_note(syncId, notes.innerHTML);
+                } else if (syncType === 'character') {
+                    window.pywebview.api.update_character_note(syncId, notes.innerHTML);
+                }
             }
         });
         

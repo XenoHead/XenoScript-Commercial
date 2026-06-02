@@ -75,7 +75,7 @@ body, html {
 }
 
 /* Canvas Areas */
-#corkboard-canvas, #freeform-canvas {
+#corkboard-canvas, #freeform-canvas, #character-bible-canvas {
     width: 100%;
     height: 100%;
     position: relative;
@@ -84,10 +84,9 @@ body, html {
     background-size: 20px 20px;
 }
 
-#network-canvas {
-    width: 100%;
-    height: 100%;
-    background-color: #121212;
+.card.character-card {
+    background-color: #A0C4FF;
+    min-height: 180px;
 }
 
 /* Draggable Cards / Sticky Notes */
