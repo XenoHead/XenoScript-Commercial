@@ -2896,6 +2896,17 @@ if (filterNonDialogueBtn) {
 }
 
 // --- Clean Spacing Logic ---
+// --- Auto-Format Logging Helper ---
+async function logAutoFormatAction(toolName, changesArray) {
+    if (!window.pywebview) return;
+    if (!changesArray || changesArray.length === 0) return;
+    try {
+        await window.pywebview.api.log_tool_action(toolName, changesArray);
+    } catch (e) {
+        console.error("Failed to log auto-format action:", e);
+    }
+}
+
 function cleanExtraSpacing() {
     if (currentDocument === 'Title Page') {
         alert("Clean Spacing is disabled on the Title Page to protect your customized vertical alignment layout.");
@@ -2912,31 +2923,46 @@ function cleanExtraSpacing() {
     }
 
     function cleanTextNodeSpaces(node) {
+        let changed = false;
         if (node.nodeType === Node.TEXT_NODE) {
-            node.nodeValue = node.nodeValue.replace(/ {2,}/g, ' ');
+            const originalText = node.nodeValue;
+            const newText = originalText.replace(/ {2,}/g, ' ');
+            if (originalText !== newText) {
+                node.nodeValue = newText;
+                changed = true;
+            }
         } else {
             for (let child of node.childNodes) {
-                cleanTextNodeSpaces(child);
+                if (cleanTextNodeSpaces(child)) changed = true;
             }
         }
+        return changed;
     }
 
     let removedCount = 0;
     let textCleanedCount = 0;
+    const changesArray = [];
 
-    paragraphs.forEach(p => {
+    paragraphs.forEach((p, idx) => {
         if (isEmptyParagraph(p)) {
             if (paragraphs.length - removedCount > 1) {
                 p.remove();
                 removedCount++;
+                changesArray.push({ issue: "Empty line", fix: "Removed empty paragraph", context: `Paragraph #${idx + 1}` });
             } else {
                 p.innerHTML = '&#8203;';
             }
         } else {
-            cleanTextNodeSpaces(p);
-            textCleanedCount++;
+            if (cleanTextNodeSpaces(p)) {
+                textCleanedCount++;
+                let preview = p.textContent.trim().substring(0, 30);
+                if (p.textContent.trim().length > 30) preview += "...";
+                changesArray.push({ issue: "Multiple sequential spaces", fix: "Reduced to single space", context: `"${preview}"` });
+            }
         }
     });
+
+    logAutoFormatAction("Clean Spacing", changesArray);
 
     saveCurrentDocument();
     updateStats();
@@ -2963,15 +2989,18 @@ if (cutDoubleParensBtn) {
         }
 
         let fixedCount = 0;
+        const changesArray = [];
         paragraphs.forEach(p => {
             // Collect all text content, stripping zero-width spaces
             let text = p.textContent.replace(/\u200B/g, '');
             let changed = false;
+            let originalText = text;
 
             // Strip one leading ( and one trailing ) if both are present
             if (text.startsWith('(') && text.endsWith(')')) {
                 text = text.slice(1, -1);
                 changed = true;
+                changesArray.push({ issue: "Manual ( ) around parenthetical", fix: "Stripped ( )", context: `"${originalText}" -> "${text}"` });
             }
 
             if (changed) {
@@ -2998,6 +3027,7 @@ if (cutDoubleParensBtn) {
         });
 
         if (fixedCount > 0) {
+            logAutoFormatAction("Cut Double Parens", changesArray);
             triggerBackup();
             updateStats();
             alert(`Fixed ${fixedCount} parenthetical line(s) — manual ( ) brackets removed.`);
@@ -3045,7 +3075,16 @@ function batchProcessTextNodes(p, names, isParenthetical) {
                     return name;
                 });
             });
-            if (val !== node.nodeValue) node.nodeValue = val;
+            if (val !== node.nodeValue) {
+                if (changesArray) {
+                    changesArray.push({
+                        issue: isParenthetical ? "Incorrect casing in parenthetical" : "Character name not capitalized",
+                        fix: isParenthetical ? "Lowercased and fixed names" : "Capitalized character name",
+                        context: `"${origVal.trim()}" -> "${val.trim()}"`
+                    });
+                }
+                node.nodeValue = val;
+            }
         } else {
             node.childNodes.forEach(processNode);
         }
@@ -3065,11 +3104,13 @@ if (fixCharNamesBtn) {
         }
 
         let fixedCount = 0;
+        const changesArray = [];
         editor.querySelectorAll('p.action, p.scene-heading').forEach(p => {
-            if (batchProcessTextNodes(p, names, false)) fixedCount++;
+            if (batchProcessTextNodes(p, names, false, changesArray)) fixedCount++;
         });
 
         if (fixedCount > 0) {
+            logAutoFormatAction("Fix Char Names", changesArray);
             triggerBackup();
             updateStats();
             alert(`Fixed character name casing in ${fixedCount} line(s).`);
@@ -3092,16 +3133,18 @@ if (fixParenthsBtn) {
         }
 
         let fixedCount = 0;
+        const changesArray = [];
         paragraphs.forEach(p => {
-            if (batchProcessTextNodes(p, names, true)) fixedCount++;
+            if (batchProcessTextNodes(p, names, true, changesArray)) fixedCount++;
         });
 
         if (fixedCount > 0) {
+            logAutoFormatAction("Fix Parenths", changesArray);
             triggerBackup();
             updateStats();
-            alert(`Formatted ${fixedCount} parenthetical line(s) — lowercase applied, character names uppercased.`);
+            alert(`Standardized casing in ${fixedCount} parenthetical line(s).`);
         } else {
-            alert('All parenthetical lines are already correctly formatted!');
+            alert('All parenthetical lines are already lowercase with correct character names!');
         }
     });
 }
@@ -4367,15 +4410,20 @@ window.updateCharacterNote = function(charName, noteContent) {
 document.getElementById('tools-fix-colors')?.addEventListener('click', () => {
     const paras = Array.from(editor.querySelectorAll('p'));
     let changedCount = 0;
+    const changesArray = [];
     
     paras.forEach((p) => {
         let changed = false;
+        let pPreview = p.textContent.trim().substring(0, 30);
+        if (p.textContent.trim().length > 30) pPreview += "...";
+        if (pPreview.length === 0) pPreview = "[Empty Block]";
         
         // Strip inline styles on the paragraph itself
         if (p.style.color || p.style.backgroundColor) {
             p.style.color = '';
             p.style.backgroundColor = '';
             changed = true;
+            changesArray.push({ issue: "Inline color on block", fix: "Stripped style color/backgroundColor", context: `"${pPreview}"` });
         }
         
         // Strip inline styles and font color tags from children
@@ -4384,15 +4432,21 @@ document.getElementById('tools-fix-colors')?.addEventListener('click', () => {
                 child.style.color = '';
                 child.style.backgroundColor = '';
                 changed = true;
+                changesArray.push({ issue: "Inline color on child element", fix: "Stripped style color/backgroundColor", context: `"${pPreview}"` });
             }
             if (child.tagName === 'FONT' && child.hasAttribute('color')) {
                 child.removeAttribute('color');
                 changed = true;
+                changesArray.push({ issue: "<font> tag with color attribute", fix: "Stripped color attribute", context: `"${pPreview}"` });
             }
         });
         
         if (changed) changedCount++;
     });
+    
+    if (changedCount > 0) {
+        logAutoFormatAction("Fix Color Maps", changesArray);
+    }
     
     alert('Color Maps fixed! Stripped inline colors from ' + changedCount + ' line(s) to restore standard block formatting.');
     saveCurrentDocument();

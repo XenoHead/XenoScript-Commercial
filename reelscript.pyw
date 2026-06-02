@@ -888,6 +888,43 @@ del "%~f0"
     def get_ai_suggestions(self, selected_text):
         return editor.get_ai_suggestions(selected_text)
 
+    def log_tool_action(self, tool_name, changes):
+        try:
+            import json, datetime
+            log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'format_tools_log.json')
+            logs = []
+            if os.path.exists(log_path):
+                with open(log_path, 'r', encoding='utf-8') as f:
+                    try:
+                        logs = json.load(f)
+                    except:
+                        logs = []
+                        
+            now = datetime.datetime.utcnow()
+            new_log = {
+                "timestamp": now.isoformat() + "Z",
+                "tool": tool_name,
+                "changes": changes
+            }
+            logs.append(new_log)
+            
+            # Prune logs older than 3 days
+            pruned_logs = []
+            for log in logs:
+                try:
+                    log_time = datetime.datetime.fromisoformat(log.get("timestamp", "").replace("Z", ""))
+                    if (now - log_time).days < 3:
+                        pruned_logs.append(log)
+                except Exception:
+                    pass
+                    
+            with open(log_path, 'w', encoding='utf-8') as f:
+                json.dump(pruned_logs, f, indent=4)
+            return True
+        except Exception as e:
+            print(f"Logging error: {e}")
+            return False
+
     def get_initial_file(self):
         if len(sys.argv) > 1 and sys.argv[1] != '--run-dialog':
             filepath = sys.argv[1]
