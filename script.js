@@ -1338,7 +1338,7 @@ function rebuildDocumentSidebar() {
     const addBtn = document.createElement('div');
     addBtn.className = 'sidebar-item';
     addBtn.id = 'add-document-btn';
-    addBtn.innerHTML = '<span class="sidebar-icon">➕</span> Add Document';
+    addBtn.innerHTML = '<span class="sidebar-icon">➕</span> Add Page';
     docList.appendChild(addBtn);
 }
 
@@ -1347,7 +1347,7 @@ docList.addEventListener('click', (e) => {
     if (!item) return;
 
     if (item.id === 'add-document-btn') {
-        const name = prompt("Enter new document name:");
+        const name = prompt("Enter new page name:");
         if (name && !appSettings.projectDocuments[name]) {
             appSettings.projectDocuments[name] = '<p class="action">&#8203;</p>';
             saveSettings();
