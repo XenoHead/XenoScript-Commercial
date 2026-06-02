@@ -630,7 +630,7 @@ function applySettingsToUI() {
     const saveLocationDiv = document.getElementById('status-save-location-divider');
     if (saveLocationText && saveLocationDiv) {
         if (appSettings.showSaveLocation && appSettings.currentProjectFile) {
-            const displayPath = appSettings.currentProjectFile.replace(/\//g, '\\\\');
+            const displayPath = appSettings.currentProjectFile.replace(/\//g, '\\');
             saveLocationText.textContent = displayPath;
             saveLocationText.title = displayPath;
             saveLocationText.style.display = 'block';
@@ -921,7 +921,7 @@ async function handleSave() {
             // Already has a file, just overwrite it
             const result = await window.pywebview.api.save_project(projectData, appSettings.currentProjectFile);
             if (result && !result.startsWith("Error")) {
-                alert("Project saved successfully!\n\nLocation: " + appSettings.currentProjectFile.replace(/\//g, '\\\\'));
+                alert("Project saved successfully!\n\nLocation: " + appSettings.currentProjectFile.replace(/\//g, '\\'));
                 applySettingsToUI();
             } else if (result) {
                 alert(result);
@@ -947,7 +947,7 @@ async function handleSaveAs() {
             const filename = result.split('\\').pop().split('/').pop().replace(/\.(rsp|ksp)$/i, '');
             updateProjectName(filename);
             addToRecent(result);
-            alert("Project saved as successfully!\n\nLocation: " + result.replace(/\//g, '\\\\'));
+            alert("Project saved as successfully!\n\nLocation: " + result.replace(/\//g, '\\'));
             applySettingsToUI();
         } else if (result) {
             alert(result);
