@@ -574,6 +574,7 @@ window.addEventListener('pywebviewready', async () => {
     const loaded = await window.pywebview.api.load_settings();
     if (loaded && Object.keys(loaded).length > 0) {
         appSettings = { ...appSettings, ...loaded };
+        appSettings.filterCustom = false;
         if (appSettings.projectDocuments && appSettings.projectDocuments['Private Pad'] !== undefined) {
             appSettings.projectDocuments['Revision Notes'] = appSettings.projectDocuments['Private Pad'];
             delete appSettings.projectDocuments['Private Pad'];
@@ -778,6 +779,11 @@ function applySettingsToUI() {
         filterNonDialogueCheck.style.visibility = appSettings.filterNonDialogue ? 'visible' : 'hidden';
     }
 
+    const filterCustomCheck = document.getElementById('filter-custom-check');
+    if (filterCustomCheck) {
+        filterCustomCheck.style.visibility = appSettings.filterCustom ? 'visible' : 'hidden';
+    }
+
     if (appSettings.darkMode) {
         document.body.classList.add('dark-mode');
     } else {
@@ -800,6 +806,7 @@ function applySettingsToUI() {
 
     document.body.classList.toggle('filter-dialogue', appSettings.filterDialogue);
     document.body.classList.toggle('filter-non-dialogue', appSettings.filterNonDialogue);
+    document.body.classList.toggle('filter-custom', appSettings.filterCustom);
 }
 
 function updateProjectName(newName) {
@@ -3023,7 +3030,10 @@ if (saveLocationBtn) {
 
 function toggleDialogueFilter() {
     appSettings.filterDialogue = !appSettings.filterDialogue;
-    if (appSettings.filterDialogue) appSettings.filterNonDialogue = false; // Mutually exclusive
+    if (appSettings.filterDialogue) {
+        appSettings.filterNonDialogue = false;
+        appSettings.filterCustom = false;
+    }
     applySettingsToUI();
     saveSettings();
 }
@@ -3034,13 +3044,82 @@ if (filterDialogueBtn) {
 
 function toggleNonDialogueFilter() {
     appSettings.filterNonDialogue = !appSettings.filterNonDialogue;
-    if (appSettings.filterNonDialogue) appSettings.filterDialogue = false; // Mutually exclusive
+    if (appSettings.filterNonDialogue) {
+        appSettings.filterDialogue = false;
+        appSettings.filterCustom = false;
+    }
     applySettingsToUI();
     saveSettings();
 }
 const filterNonDialogueBtn = document.getElementById('tools-filter-non-dialogue');
 if (filterNonDialogueBtn) {
     filterNonDialogueBtn.addEventListener('click', toggleNonDialogueFilter);
+}
+
+// --- Custom Filter Logic ---
+appSettings.filterCustom = false;
+let customFilterTypes = [];
+
+function applyCustomFilterCSS() {
+    let styleEl = document.getElementById('custom-filter-style');
+    if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'custom-filter-style';
+        document.head.appendChild(styleEl);
+    }
+    
+    if (appSettings.filterCustom && customFilterTypes.length > 0) {
+        const notSelectors = customFilterTypes.map(t => `:not(.${t})`).join('');
+        styleEl.innerHTML = `body.filter-custom .script-page p${notSelectors} { display: none !important; }`;
+    } else {
+        styleEl.innerHTML = '';
+    }
+}
+
+const btnFilterCustom = document.getElementById('tools-filter-custom');
+const customFilterModal = document.getElementById('custom-filter-modal');
+const btnApplyCustomFilter = document.getElementById('btn-apply-custom-filter');
+const btnClearCustomFilter = document.getElementById('btn-clear-custom-filter');
+const btnCancelCustomFilter = document.getElementById('btn-cancel-custom-filter');
+const btnCloseCustomFilterTop = document.getElementById('btn-close-custom-filter-top');
+
+if (btnFilterCustom) {
+    btnFilterCustom.addEventListener('click', () => {
+        document.querySelectorAll('#custom-filter-checkboxes input[type="checkbox"]').forEach(cb => {
+            cb.checked = customFilterTypes.includes(cb.value);
+        });
+        customFilterModal.style.display = 'flex';
+    });
+}
+
+const closeCustomFilterModal = () => customFilterModal.style.display = 'none';
+if (btnCancelCustomFilter) btnCancelCustomFilter.addEventListener('click', closeCustomFilterModal);
+if (btnCloseCustomFilterTop) btnCloseCustomFilterTop.addEventListener('click', closeCustomFilterModal);
+
+if (btnApplyCustomFilter) {
+    btnApplyCustomFilter.addEventListener('click', () => {
+        customFilterTypes = Array.from(document.querySelectorAll('#custom-filter-checkboxes input[type="checkbox"]:checked')).map(cb => cb.value);
+        if (customFilterTypes.length > 0) {
+            appSettings.filterCustom = true;
+            appSettings.filterDialogue = false;
+            appSettings.filterNonDialogue = false;
+        } else {
+            appSettings.filterCustom = false;
+        }
+        applyCustomFilterCSS();
+        applySettingsToUI();
+        closeCustomFilterModal();
+    });
+}
+
+if (btnClearCustomFilter) {
+    btnClearCustomFilter.addEventListener('click', () => {
+        appSettings.filterCustom = false;
+        customFilterTypes = [];
+        applyCustomFilterCSS();
+        applySettingsToUI();
+        closeCustomFilterModal();
+    });
 }
 
 // --- Clean Spacing Logic ---

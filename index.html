@@ -137,6 +137,9 @@
                     <div class="submenu">
                         <div class="dropdown-item" id="tools-filter-dialogue"><span><span id="filter-dialogue-check" style="visibility:hidden; margin-right:6px;">✔</span>Dialogue Filter</span></div>
                         <div class="dropdown-item" id="tools-filter-non-dialogue"><span><span id="filter-non-dialogue-check" style="visibility:hidden; margin-right:6px;">✔</span>Non-Dialogue Filter</span></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" id="tools-filter-custom"><span><span id="filter-custom-check" style="visibility:hidden; margin-right:6px;">✔</span>Custom Filter...</span></div>
+                        <div class="dropdown-divider"></div>
                         <div class="dropdown-item" id="tools-char-filter"><span>Character Filter</span></div>
                     </div>
                 </div>
@@ -733,6 +736,32 @@
             <div style="display: flex; gap: 10px;">
                 <button id="btn-clear-correction-logs" class="modal-btn" style="flex: 1; background-color: #ef4444; font-weight: bold; padding: 10px; border-radius: 6px;">Clear Logs</button>
                 <button id="btn-close-correction-logs" class="modal-btn" style="flex: 1; background-color: #4a5568; font-weight: bold; padding: 10px; border-radius: 6px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Filter Modal -->
+    <div id="custom-filter-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 400px; max-width: 90vw; border-radius: 12px; border: 1px solid #36424e; background: var(--topbar-bg); box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #36424e; padding-bottom: 10px;">
+                <h2 style="margin: 0; font-size: 18px; font-weight: bold; color: white;">🎛️ Custom Filter</h2>
+                <button id="btn-close-custom-filter-top" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 20px;">×</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 0; margin-bottom: 15px;">Select the line types you want to SEE.</p>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; color: #d1d5db; font-size: 14px;" id="custom-filter-checkboxes">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="scene-heading"> Scene Heading</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="action"> Action</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="character"> Character</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="dialogue"> Dialogue</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="parenthetical"> Parenthetical</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="dual"> Dual Dialogue</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="transition"> Transition</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="shot"> Shot</label>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-apply-custom-filter" class="modal-btn" style="flex: 1; background-color: #3b82f6; font-weight: bold; padding: 10px; border-radius: 6px;">Apply</button>
+                <button id="btn-clear-custom-filter" class="modal-btn" style="flex: 1; background-color: #ef4444; font-weight: bold; padding: 10px; border-radius: 6px;">Turn Off</button>
+                <button id="btn-cancel-custom-filter" class="modal-btn" style="flex: 1; background-color: #4a5568; font-weight: bold; padding: 10px; border-radius: 6px;">Cancel</button>
             </div>
         </div>
     </div>
