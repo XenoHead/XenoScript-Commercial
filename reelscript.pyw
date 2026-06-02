@@ -896,4 +896,9 @@ if __name__ == '__main__':
     version_str = version_info.get("version", "2.5")
     
     active_window = webview.create_window(f'ReelScript {version_str}', url=html_path, js_api=api, width=1280, height=800)
-    webview.start()
+
+    icon_path = os.path.join(current_dir, 'movie-icon.png')
+    if os.path.exists(icon_path):
+        webview.start(icon=icon_path)
+    else:
+        webview.start()
