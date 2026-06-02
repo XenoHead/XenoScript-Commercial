@@ -10,6 +10,55 @@ window.addEventListener('pywebviewready', async () => {
     }
 });
 
+// --- Modal Logic ---
+const modal = document.getElementById('card-modal');
+const modalTitle = document.getElementById('modal-title');
+const modalBody = document.getElementById('modal-body');
+const modalNotes = document.getElementById('modal-notes');
+let activeSmallNotesEl = null;
+let activeSyncType = null;
+let activeSyncId = null;
+
+document.getElementById('modal-close').addEventListener('click', () => {
+    modal.style.display = 'none';
+});
+
+modalNotes.addEventListener('input', () => {
+    if (activeSmallNotesEl) {
+        activeSmallNotesEl.innerHTML = modalNotes.innerHTML;
+    }
+    if (window.pywebview && activeSyncType !== null) {
+        if (activeSyncType === 'scene') {
+            window.pywebview.api.update_mindmap_note(activeSyncId, modalNotes.innerHTML);
+        } else if (activeSyncType === 'character') {
+            window.pywebview.api.update_character_note(activeSyncId, modalNotes.innerHTML);
+        }
+    }
+});
+
+function openModal(titleEl, bodyEl, notesEl, syncType, syncId) {
+    modalTitle.textContent = titleEl.textContent;
+    modalBody.textContent = bodyEl.textContent;
+    
+    if (notesEl) {
+        modalNotes.innerHTML = notesEl.innerHTML;
+        activeSmallNotesEl = notesEl;
+        activeSyncType = syncType;
+        activeSyncId = syncId;
+        modalNotes.style.display = 'block';
+        document.querySelector('.modal-notes-label').style.display = 'block';
+    } else {
+        modalNotes.innerHTML = '';
+        activeSmallNotesEl = null;
+        activeSyncType = null;
+        activeSyncId = null;
+        modalNotes.style.display = 'none';
+        document.querySelector('.modal-notes-label').style.display = 'none';
+    }
+    
+    modal.style.display = 'flex';
+}
+
 // Tab Switching
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -129,6 +178,12 @@ function createCard(titleText, bodyText, x, y, editable = false, notesHtml = '',
     }
     
     card.addEventListener('mousedown', dragStart);
+    card.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const notesEl = card.querySelector('.card-notes');
+        openModal(title, body, notesEl, syncType, syncId);
+    });
+    
     return card;
 }
 
