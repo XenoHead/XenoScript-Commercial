@@ -1200,11 +1200,11 @@ function updatePageNumbersDisplay(pages, pageHeightPixels) {
     overlay.innerHTML = '';
     if (!appSettings.showPageNumbers) return;
 
-    // Start numbering from page 1
+    // Start numbering from page 2 (since page 1 is the Title Page)
     for (let i = 1; i <= pages; i++) {
         const num = document.createElement('div');
         num.className = 'editor-page-number';
-        num.textContent = `${i}.`;
+        num.textContent = `${i + 1}.`;
         // 0.5 inches (48px) from the top edge of each simulated 11-inch page
         num.style.top = `${((i - 1) * pageHeightPixels) + 48}px`;
         overlay.appendChild(num);
@@ -1547,7 +1547,7 @@ function handleExport(format) {
         const exportConfig = {
             titleLines: titleLines,
             showPageNumbers: appSettings.showPageNumbers,
-            startPageNumber: 1
+            startPageNumber: 2
         };
 
         let apiCall;
