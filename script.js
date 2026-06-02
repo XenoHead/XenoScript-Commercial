@@ -4361,6 +4361,11 @@ document.getElementById('tools-auto-format')?.addEventListener('click', () => {
             guessedType = 'transition';
         } else if (text.startsWith('(') && text.endsWith(')')) {
             guessedType = 'parenthetical';
+            // ReelScript uses CSS for brackets, so we remove physical ones to prevent doubling
+            p.textContent = text.substring(1, text.length - 1).trim();
+        } else if (p.classList.contains('parenthetical') && (prevType === 'character' || prevType === 'parenthetical')) {
+            // Natively formatted parentheticals don't have physical brackets in the DOM
+            guessedType = 'parenthetical';
         } else if (text === upperText && /[A-Z]/.test(text) && text.length < 50 && !text.includes('!') && !text.includes('?')) {
             // Mostly likely a character name if it's all caps, short, and no punctuation.
             guessedType = 'character';
