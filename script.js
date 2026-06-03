@@ -5611,23 +5611,23 @@ if (btnToolsCapitalizeNames) {
             
             paragraphs.forEach(p => {
                 if (p.classList.contains('character')) {
-                    // Strip parentheticals like "JOHN (V.O.)"
-                    let name = p.textContent.split('(')[0].trim().toUpperCase();
-                    if (name && name !== '\u200B') uniqueNames.add(name);
+                    // Strip parentheticals like "JOHN (V.O.)" and remove zero-width spaces
+                    let name = p.textContent.replace(/[\u200B]/g, '').split('(')[0].trim().toUpperCase();
+                    if (name) uniqueNames.add(name);
                 }
             });
             
             // Also grab from charSheetData if loaded
             if (typeof charSheetData !== 'undefined' && charSheetData && charSheetData.characters) {
                 charSheetData.characters.forEach(c => {
-                    if (c.name) uniqueNames.add(c.name.trim().toUpperCase());
+                    if (c.name) uniqueNames.add(c.name.replace(/[\u200B]/g, '').trim().toUpperCase());
                 });
             } else if (appSettings && appSettings.projectDocuments && appSettings.projectDocuments['MindMapData']) {
                 try {
                     const parsed = JSON.parse(appSettings.projectDocuments['MindMapData']);
                     if (parsed && parsed.characters) {
                         parsed.characters.forEach(c => {
-                            if (c.name) uniqueNames.add(c.name.trim().toUpperCase());
+                            if (c.name) uniqueNames.add(c.name.replace(/[\u200B]/g, '').trim().toUpperCase());
                         });
                     }
                 } catch(e) {}
