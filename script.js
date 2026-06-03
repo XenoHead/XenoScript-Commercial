@@ -5605,13 +5605,15 @@ const btnCloseCapNames = document.getElementById('btn-close-cap-names');
 if (btnToolsCapitalizeNames) {
     btnToolsCapitalizeNames.addEventListener('click', () => {
         try {
-            // Extract unique names from character blocks
+            // Extract unique names from character blocks in the editor
             const uniqueNames = new Set();
-            blocks.forEach(b => {
-                if (b.type === 'character') {
+            const paragraphs = Array.from(editor.querySelectorAll('p'));
+            
+            paragraphs.forEach(p => {
+                if (p.classList.contains('character')) {
                     // Strip parentheticals like "JOHN (V.O.)"
-                    let name = b.text.split('(')[0].trim().toUpperCase();
-                    if (name) uniqueNames.add(name);
+                    let name = p.textContent.split('(')[0].trim().toUpperCase();
+                    if (name && name !== '\u200B') uniqueNames.add(name);
                 }
             });
             
@@ -5621,7 +5623,6 @@ if (btnToolsCapitalizeNames) {
                     if (c.name) uniqueNames.add(c.name.trim().toUpperCase());
                 });
             } else if (appSettings && appSettings.projectDocuments && appSettings.projectDocuments['MindMapData']) {
-                // If not loaded into memory yet, try parsing from settings
                 try {
                     const parsed = JSON.parse(appSettings.projectDocuments['MindMapData']);
                     if (parsed && parsed.characters) {
@@ -5634,7 +5635,7 @@ if (btnToolsCapitalizeNames) {
             
             capNamesList.innerHTML = '';
             if (uniqueNames.size === 0) {
-                capNamesList.innerHTML = '<div style="color: #94a3b8; font-size: 13px; text-align: center; padding: 10px;">No character blocks found in the script.</div>';
+                capNamesList.innerHTML = '<div style="color: #94a3b8; font-size: 13px; text-align: center; padding: 10px;">No character names found in the script.</div>';
                 btnExecuteCapNames.disabled = true;
                 btnExecuteCapNames.style.opacity = '0.5';
             } else {
@@ -5655,7 +5656,7 @@ if (btnToolsCapitalizeNames) {
                     const cb = document.createElement('input');
                     cb.type = 'checkbox';
                     cb.value = name;
-                    cb.checked = true; // Checked by default
+                    cb.checked = true;
                     
                     label.appendChild(cb);
                     label.appendChild(document.createTextNode(name));
@@ -5708,33 +5709,49 @@ if (btnExecuteCapNames) {
         
         let replacementsMade = 0;
         
-        blocks.forEach(b => {
-            if (b.type !== 'dialogue' && b.type !== 'character') {
-                selectedNames.forEach(name => {
-                    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const regex = new RegExp('\\b' + escapeRegExp(name) + '\\b', 'g');
-                    
-                    // We need a case-insensitive match but only replace if it's not already uppercase
-                    // To count accurate replacements made, we check if it doesn't strictly match the uppercase.
-                    // Wait, regex with 'g' and NOT 'i' will only match exact. We want 'gi'
-                    const iregex = new RegExp('\\b' + escapeRegExp(name) + '\\b', 'gi');
-                    
-                    const matches = b.text.match(iregex);
+        // Build regexes
+        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const nameRegexes = selectedNames.map(name => ({
+            name: name.toUpperCase(),
+            regex: new RegExp('\\b' + escapeRegExp(name) + '\\b', 'gi')
+        }));
+        
+        function processTextNode(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                let originalText = node.nodeValue;
+                let newText = originalText;
+                
+                nameRegexes.forEach(({name, regex}) => {
+                    const matches = newText.match(regex);
                     if (matches) {
                         matches.forEach(m => {
-                            if (m !== name.toUpperCase()) {
+                            if (m !== name) {
                                 replacementsMade++;
                             }
                         });
+                        newText = newText.replace(regex, name);
                     }
-                    
-                    b.text = b.text.replace(iregex, name.toUpperCase());
                 });
+                
+                if (originalText !== newText) {
+                    node.nodeValue = newText;
+                }
+            } else {
+                for (let child of node.childNodes) {
+                    processTextNode(child);
+                }
+            }
+        }
+        
+        const paragraphs = Array.from(editor.querySelectorAll('p'));
+        paragraphs.forEach(p => {
+            if (!p.classList.contains('dialogue') && !p.classList.contains('character')) {
+                processTextNode(p);
             }
         });
         
-        renderBlocks();
-        saveScript();
+        triggerBackup();
+        updateStats();
         
         capNamesModal.style.display = 'none';
         alert(`Capitalization complete. Capitalized ${replacementsMade} name instances.`);
