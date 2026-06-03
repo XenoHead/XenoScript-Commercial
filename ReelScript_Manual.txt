@@ -181,12 +181,18 @@ If you are about to rewrite a huge section and want to save a permanent
  6. USEFUL TOOLS & FEATURES
 ========================================================================
 
-CHARACTER FILTER & RENAME:
-- Tools -> Character Filter: Hides the entire script except for the 
+CHARACTER FILTER, RENAME, & CAPITALIZE:
+- Tools -> Char -> Character Filter: Hides the entire script except for the 
   dialogue of the characters you select. Great for reading a character's 
-  arc back-to-back.
-- Tools -> Rename Character: Globally renames a character's headers AND 
+  arc back-to-back. Now features persistent sortable list order (Asc/Desc).
+- Tools -> Char -> Rename Character: Globally renames a character's headers AND 
   smart-replaces their name anywhere it appears in dialogue/action lines.
+- Tools -> Char -> Capitalize Names: A checklist tool to scan for character 
+  names outside of dialogue and safely capitalize them without breaking flow.
+
+TEXT COLOR HIGHLIGHT TOOL:
+- In the mini formatting toolbar, click the "A" with an underline to quickly 
+  highlight text using your custom script format colors or a custom hex color.
 
 FIND & REPLACE:
 - Edit -> Find & Replace (Ctrl+F). Standard search tool with Match Case 

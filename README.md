@@ -49,7 +49,9 @@
 - **Mind Map** (`View -> Mind Map`) — visualize scene flows with auto-populated metadata cards
 - **Auto-Format Correction Logs** (`Help -> Correction Logs`) — tracks and logs formatting fixes by Scene # and Line #
 - **Custom Filters** (`Tools -> Filters -> Custom Filter`) — selectively isolate ANY combination of line types (e.g. only Action and Shots)
-- **Character Filter** — isolate one character's dialogue to read their arc in sequence
+- **Character Filter** — isolate one character's dialogue to read their arc in sequence. Now features persistent sortable list order (Asc/Desc).
+- **Capitalize Names** (`Tools -> Char -> Capitalize Names`) — Checklist tool to capitalize character names outside of dialogue safely.
+- **Text Color Highlight Tool** — Quickly highlight text with your custom script format colors or any custom hex color directly from the mini toolbar.
 - **Rename Character** — globally rename across headers, dialogue, and action lines
 - **Spellcheck** — custom dictionary that ignores screenplay abbreviations (`INT/EXT`) and supports custom names
 - **Export to PDF** — industry-standard formatting with Title Page
