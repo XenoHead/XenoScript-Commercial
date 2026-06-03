@@ -4426,33 +4426,56 @@ function renderSnapshotsList() {
     if (!appSettings.snapshots) appSettings.snapshots = [];
     snapshotsList.innerHTML = '';
 
-    const currentProjectName = appSettings.projectName || 'Untitled Project';
-    const projectSnapshots = appSettings.snapshots.filter(snap =>
-        (snap.projectName || 'Untitled Project') === currentProjectName
-    );
-
-    if (projectSnapshots.length === 0) {
-        snapshotsList.innerHTML = '<p style="text-align:center; margin-top:20px; font-size: 11px;">No snapshots created yet for this project.</p>';
+    if (appSettings.snapshots.length === 0) {
+        snapshotsList.innerHTML = '<p style="text-align:center; margin-top:20px; font-size: 11px;">No snapshots created yet.</p>';
         return;
     }
 
-    [...projectSnapshots].reverse().forEach(snap => {
-        const div = document.createElement('div');
-        div.className = 'hotkey-row';
-        div.style.padding = '8px';
-        div.style.borderBottom = '1px solid #36424e';
+    const currentProjectName = appSettings.projectName || 'Untitled Project';
 
-        div.innerHTML = `
-            <div style="flex:1;">
-                <div style="font-weight:bold; font-size:13px;">${snap.name}</div>
-                <div style="font-size:10px; color:var(--text-muted);">${snap.date}</div>
-            </div>
-            <div style="display:flex; gap:5px;">
-                <button class="modal-btn" onclick="restoreSnapshot(${snap.id})" style="background-color:#f59e0b; padding:4px 8px; font-size:10px;">Restore</button>
-                <button class="modal-btn" onclick="if(confirm('Delete this snapshot?')) { appSettings.snapshots = appSettings.snapshots.filter(s => s.id !== ${snap.id}); saveSettings(); renderSnapshotsList(); }" style="background-color:#ef4444; padding:4px 8px; font-size:10px;">Delete</button>
-            </div>
-        `;
-        snapshotsList.appendChild(div);
+    // Group snapshots by project name
+    const grouped = {};
+    appSettings.snapshots.forEach(snap => {
+        const pName = snap.projectName || 'Untitled Project';
+        if (!grouped[pName]) grouped[pName] = [];
+        grouped[pName].push(snap);
+    });
+
+    // Move current project to the top
+    const projectNames = Object.keys(grouped).sort((a, b) => {
+        if (a === currentProjectName) return -1;
+        if (b === currentProjectName) return 1;
+        return a.localeCompare(b);
+    });
+
+    projectNames.forEach(pName => {
+        const header = document.createElement('div');
+        header.style.padding = '8px';
+        header.style.backgroundColor = '#1a232c';
+        header.style.fontWeight = 'bold';
+        header.style.fontSize = '11px';
+        header.style.color = 'var(--text-muted)';
+        header.textContent = `Project: ${pName}`;
+        snapshotsList.appendChild(header);
+
+        [...grouped[pName]].reverse().forEach(snap => {
+            const div = document.createElement('div');
+            div.className = 'hotkey-row';
+            div.style.padding = '8px';
+            div.style.borderBottom = '1px solid #36424e';
+
+            div.innerHTML = `
+                <div style="flex:1;">
+                    <div style="font-weight:bold; font-size:13px;">${snap.name}</div>
+                    <div style="font-size:10px; color:var(--text-muted);">${snap.date}</div>
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <button class="modal-btn" onclick="restoreSnapshot(${snap.id})" style="background-color:#f59e0b; padding:4px 8px; font-size:10px;">Restore</button>
+                    <button class="modal-btn" onclick="if(confirm('Delete this snapshot?')) { appSettings.snapshots = appSettings.snapshots.filter(s => s.id !== ${snap.id}); saveSettings(); renderSnapshotsList(); }" style="background-color:#ef4444; padding:4px 8px; font-size:10px;">Delete</button>
+                </div>
+            `;
+            snapshotsList.appendChild(div);
+        });
     });
 }
 
