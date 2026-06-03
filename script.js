@@ -3734,32 +3734,7 @@ function batchProcessTextNodes(p, names, isParenthetical) {
     return changed;
 }
 
-const fixCharNamesBtn = document.getElementById('tools-fix-char-names');
-if (fixCharNamesBtn) {
-    fixCharNamesBtn.addEventListener('click', () => {
-        invalidateCharNameCache();
-        const names = getCharNameTable();
-        if (names.size === 0) {
-            alert('No character names found in the document.\nAdd character-type lines first.');
-            return;
-        }
 
-        let fixedCount = 0;
-        const changesArray = [];
-        editor.querySelectorAll('p.action, p.scene-heading').forEach(p => {
-            if (batchProcessTextNodes(p, names, false, changesArray)) fixedCount++;
-        });
-
-        if (fixedCount > 0) {
-            logAutoFormatAction("Fix Char Names", changesArray);
-            triggerBackup();
-            updateStats();
-            alert(`Fixed character name casing in ${fixedCount} line(s).`);
-        } else {
-            alert('All character names in action and scene lines are already correctly capitalized!');
-        }
-    });
-}
 
 const fixParenthsBtn = document.getElementById('tools-fix-parenths');
 if (fixParenthsBtn) {
