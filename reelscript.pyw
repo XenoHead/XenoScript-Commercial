@@ -663,12 +663,6 @@ print(file)
             
         if self.spell is None:
             self.spell = SpellChecker()
-            
-            # Default screenwriting abbreviations
-            screenplay_terms = ["int", "ext", "cont", "vo", "os", "pov", "cgi", "vfx", "sfx", "bg", "fg"]
-            for term in screenplay_terms:
-                self.personal_dict.add(term)
-                
             dict_path = os.path.join(self.backup_dir, "personal_dict.txt")
             if os.path.exists(dict_path):
                 with open(dict_path, 'r', encoding='utf-8') as f:
@@ -678,16 +672,123 @@ print(file)
             self.spell.word_frequency.load_words(list(self.personal_dict))
 
         import re
-        words = re.findall(r"\b[a-zA-Z\']+\b", text)
-        unique_words = list(dict.fromkeys(words)) # Removes duplicates while preserving order
-        
+
+        # Helper to check if a word is at the start of a sentence
+        def is_start_of_sentence(t, index):
+            preceding = t[:index].rstrip(" \t")
+            if not preceding:
+                return True
+            if preceding[-1] in {'\n', '\r'}:
+                return True
+            # Strip quotes/brackets to find punctuation
+            preceding = preceding.rstrip(" \t\n\r\"'()[]{}“”‘’")
+            if not preceding:
+                return True
+            if preceding[-1] in {'.', '?', '!'}:
+                return True
+            return False
+
+        # Helper to strip contraction suffixes
+        def strip_contraction(w):
+            # Strip common suffixes: 's, 're, 'll, 'd, 've, 'm, n't
+            w_base = re.sub(r"'(s|re|ll|d|ve|m|S|RE|LL|D|VE|M)$", "", w)
+            w_base = re.sub(r"n't$", "", w_base, flags=re.IGNORECASE)
+            return w_base.rstrip("'")
+
+        screenplay_abbreviations = {
+            "int", "ext", "cont", "vo", "os", "pov", "cgi", "vfx", "sfx", "bg", "fg", 
+            "cont'd", "mos", "oc", "est", "fade", "cut", "transition", "montage", "scene"
+        }
+
+        ignore_set = {
+            # Common English contractions
+            "i'm", "we're", "you're", "they're", "he's", "she's", "it's", "we've", "i've", "you've", "they've",
+            "i'd", "you'd", "he'd", "she'd", "we'd", "they'd", "i'll", "you'll", "he'll", "she'll", "we'll", "they'll",
+            "isn't", "aren't", "wasn't", "weren't", "haven't", "hasn't", "hadn't", "don't", "doesn't", "didn't",
+            "won't", "wouldn't", "shan't", "shouldn't", "can't", "cannot", "couldn't", "mustn't", "let's",
+            "who's", "what's", "here's", "there's", "where's", "when's", "why's", "how's", "that's", "how'd", "what'd"
+        }
+
+        # Build dynamic proper names / characters set
+        proper_names_found = set()
+
+        # 1. From mindmap data
+        if isinstance(self.mindmap_data, dict):
+            for char in self.mindmap_data.get("characters", []):
+                if isinstance(char, dict) and "name" in char:
+                    proper_names_found.add(char["name"].lower())
+            for scene in self.mindmap_data.get("scenes", []):
+                if isinstance(scene, dict) and "characters" in scene:
+                    for char_name in scene.get("characters", []):
+                        if isinstance(char_name, str):
+                            proper_names_found.add(char_name.lower())
+
+        # 2. From all-caps lines in text (indicates character headings, sluglines)
+        for line in text.splitlines():
+            line_stripped = line.strip()
+            if len(line_stripped) > 1 and line_stripped.isupper():
+                # Extract words from the uppercase line
+                for part in re.findall(r"\b[a-zA-Z\']+\b", line_stripped):
+                    proper_names_found.add(part.lower())
+
+        # 3. First pass: Find capitalized words not at start of sentence that are not in the dictionary
+        matches = list(re.finditer(r"\b[a-zA-Z\']+\b", text))
+        for m in matches:
+            w = m.group(0)
+            if len(w) >= 2 and w[0].isupper() and not w.isupper():
+                if not is_start_of_sentence(text, m.start()):
+                    w_base = strip_contraction(w)
+                    w_lower = w_base.lower()
+                    if w_lower not in self.personal_dict and w_lower not in screenplay_abbreviations and w_lower not in self.spell:
+                        proper_names_found.add(w_lower)
+
+        # Second pass: Determine which words are misspelled
         misspelled = []
-        for w in unique_words:
-            w_clean = re.sub(r'[^\w\s\']', '', w.lower())
-            if not w_clean or w_clean in self.personal_dict or w_clean in self.spell:
+        seen_words = set()
+
+        for m in matches:
+            w = m.group(0)
+            w_lower = w.lower()
+
+            if w_lower in seen_words:
                 continue
-            
-            misspelled.append({"word": w, "suggestions": self.get_spell_suggestions(w).get("suggestions", [])})
+            seen_words.add(w_lower)
+
+            # Heuristic 1: Skip single letter words
+            if len(w) <= 1:
+                continue
+
+            # Heuristic 2: Skip screenplay abbreviations and common contractions
+            if w_lower in screenplay_abbreviations or w_lower in ignore_set or w_lower in self.personal_dict:
+                continue
+
+            # Heuristic 3: Skip all-caps words (character names, sluglines, transitions)
+            if len(w) >= 2 and w.isupper():
+                continue
+
+            # Heuristic 4: Apply contraction stripping
+            w_base = strip_contraction(w)
+            w_base_lower = w_base.lower()
+
+            if w_base_lower in screenplay_abbreviations or w_base_lower in ignore_set or w_base_lower in self.personal_dict or w_base_lower in self.spell or w_base.isupper():
+                continue
+
+            # Heuristic 5: Proper names ignore list
+            if w_base_lower in proper_names_found:
+                continue
+
+            # Heuristic 6: Capitalized word not at the start of a sentence is a proper name
+            if len(w) >= 2 and w[0].isupper() and not w.isupper():
+                if not is_start_of_sentence(text, m.start()):
+                    continue
+
+            # Check if misspelled
+            if w_base_lower not in self.spell:
+                sugg = self.get_spell_suggestions(w_base).get("suggestions", [])
+                if w[0].isupper() and sugg:
+                    sugg = [s.capitalize() for s in sugg]
+                misspelled.append({"word": w, "suggestions": sugg})
+
         return {"error": None, "misspelled": misspelled}
 
     def add_to_dictionary(self, word):
