@@ -62,6 +62,10 @@ echo [3/3] Creating installer with Inno Setup...
 set ISCC=""
 if exist "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" set ISCC="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 if exist "C:\Program Files\Inno Setup 6\ISCC.exe"       set ISCC="C:\Program Files\Inno Setup 6\ISCC.exe"
+if exist "D:\Program Files (x86)\Inno Setup 6\ISCC.exe" set ISCC="D:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+if exist "D:\Program Files\Inno Setup 6\ISCC.exe"       set ISCC="D:\Program Files\Inno Setup 6\ISCC.exe"
+where ISCC.exe >nul 2>nul
+if %errorlevel% equ 0 if %ISCC%=="" set ISCC=ISCC.exe
 
 if %ISCC%=="" (
     echo.

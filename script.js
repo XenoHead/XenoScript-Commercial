@@ -386,6 +386,7 @@ let appSettings = {
     localDir: null,
     cloudDir: null,
     autoSaveInterval: 5,
+    enableAutoSave: false,
     maxBackupLimit: 5,
     authorName: 'Writer',
     authorColor: '#ef4444',
@@ -732,9 +733,14 @@ window.addEventListener('pywebviewready', async () => {
     try {
         const verInfo = await window.pywebview.api.get_version_info();
         if (verInfo && verInfo.version) {
+            window.APP_VERSION = verInfo.version;
             const titleDisplay = document.getElementById('app-title-display');
             if (titleDisplay) {
                 titleDisplay.textContent = `ReelScript ${verInfo.version}`;
+            }
+            const aboutVersion = document.getElementById('about-version');
+            if (aboutVersion) {
+                aboutVersion.innerText = verInfo.version;
             }
         }
     } catch (err) {
@@ -759,6 +765,56 @@ window.addEventListener('pywebviewready', async () => {
         }
     }
 
+    // Redirect to local copy on startup if the last opened file was on cloud
+    if (window.pywebview && appSettings.currentProjectFile && appSettings.localDir && appSettings.projectName) {
+        try {
+            const localCopy = await window.pywebview.api.get_local_copy_if_cloud(
+                appSettings.currentProjectFile,
+                appSettings.localDir,
+                appSettings.projectName
+            );
+            if (localCopy && localCopy.data) {
+                // Local copy exists and was loaded
+                const parsed = JSON.parse(localCopy.data);
+                if (parsed['Private Pad'] !== undefined) {
+                    parsed['Revision Notes'] = parsed['Private Pad'];
+                    delete parsed['Private Pad'];
+                }
+                appSettings.projectDocuments = parsed;
+                if (appSettings.projectDocuments['Default Document']) {
+                    appSettings.projectDocuments['Main Script'] = appSettings.projectDocuments['Default Document'];
+                    delete appSettings.projectDocuments['Default Document'];
+                }
+                appSettings.currentProjectFile = localCopy.filepath;
+                const filename = localCopy.filepath.split('\\').pop().split('/').pop().replace(/\.(rsp|ksp)$/i, '');
+                updateProjectName(filename);
+                console.log("Redirected startup to local copy:", localCopy.filepath);
+            } else {
+                // Local copy does not exist, check if currentProjectFile is a cloud path
+                const normCurrent = appSettings.currentProjectFile.replace(/\\/g, '/').toLowerCase();
+                const normLocalDir = appSettings.localDir.replace(/\\/g, '/').toLowerCase();
+                if (!normCurrent.includes(normLocalDir)) {
+                    // It is a cloud path, and we have no local copy yet!
+                    const safeName = appSettings.projectName.replace(/[\\/:*?"<>|]/g, '');
+                    const localPath = appSettings.localDir + '\\' + safeName + '.rsp';
+                    
+                    if (appSettings.enableAutoSave) {
+                        // Create the local copy using the current projectDocuments
+                        const projectData = JSON.stringify(appSettings.projectDocuments);
+                        await window.pywebview.api.save_project(projectData, localPath);
+                        console.log("Created local copy from settings cache and redirected startup:", localPath);
+                    } else {
+                        console.log("Redirected startup to local copy in-memory (no file created yet):", localPath);
+                    }
+                    
+                    appSettings.currentProjectFile = localPath;
+                }
+            }
+        } catch (e) {
+            console.error("Error checking/redirecting to local copy on startup", e);
+        }
+    }
+
     const initialFile = await window.pywebview.api.get_initial_file();
     if (initialFile && initialFile.data) {
         try {
@@ -777,10 +833,29 @@ window.addEventListener('pywebviewready', async () => {
             }
 
             currentDocument = Object.keys(parsed)[0] || 'Main Script';
-            appSettings.currentProjectFile = initialFile.filepath;
-            const filename = initialFile.filepath.split('\\').pop().split('/').pop().replace(/\.(rsp|ksp)$/i, '');
+            
+            // Redirect path if initialFile is a cloud path
+            let filepathToUse = initialFile.filepath;
+            if (isCloudPath(filepathToUse)) {
+                const namePart = filepathToUse.split('\\').pop().split('/').pop();
+                if (appSettings.localDir) {
+                    filepathToUse = appSettings.localDir + '\\' + namePart;
+                } else {
+                    filepathToUse = null;
+                }
+                if (filepathToUse) {
+                    alert("Opened cloud project. To protect your work, changes will be saved to your local folder:\n\n" + filepathToUse.replace(/\//g, '\\'));
+                } else {
+                    alert("Opened cloud project. Since no local directory is configured, please use 'File -> Save As' to select a local folder to save your project.");
+                }
+            }
+            
+            appSettings.currentProjectFile = filepathToUse;
+            const filename = filepathToUse ? filepathToUse.split('\\').pop().split('/').pop().replace(/\.(rsp|ksp)$/i, '') : "Untitled Project";
             updateProjectName(filename);
-            addToRecent(initialFile.filepath);
+            if (filepathToUse) {
+                addToRecent(filepathToUse);
+            }
             saveSettings();
         } catch (e) { alert("Invalid project file."); }
     } else if (initialFile && initialFile.error) { alert(initialFile.error); }
@@ -868,6 +943,17 @@ function applySettingsToUI() {
     const maxBackupInput = document.getElementById('max-backup-limit');
     if (maxBackupInput && appSettings.maxBackupLimit !== undefined) {
         maxBackupInput.value = appSettings.maxBackupLimit;
+    }
+    const chkEnableAutosave = document.getElementById('chk-enable-autosave');
+    if (chkEnableAutosave) {
+        chkEnableAutosave.checked = !!appSettings.enableAutoSave;
+    }
+    if (appSettings.enableAutoSave) {
+        syncDot.style.backgroundColor = '#10b981';
+        syncText.textContent = 'Local Backup Active';
+    } else {
+        syncDot.style.backgroundColor = '#4a5568';
+        syncText.textContent = 'Auto-Save Disabled';
     }
     startAutoSaveInterval();
 
@@ -1059,12 +1145,31 @@ function updateRecentProjectsUI() {
                         }
 
                         currentDocument = Object.keys(parsed)[0] || 'Main Script';
-                        appSettings.currentProjectFile = result.filepath;
-                        const finalName = filename.replace(/\.(rsp|ksp)$/i, '');
+                        
+                        // Redirect path if it is a cloud file
+                        let filepathToUse = result.filepath;
+                        if (isCloudPath(filepathToUse)) {
+                            const namePart = filepathToUse.split('\\').pop().split('/').pop();
+                            if (appSettings.localDir) {
+                                filepathToUse = appSettings.localDir + '\\' + namePart;
+                            } else {
+                                filepathToUse = null;
+                            }
+                            if (filepathToUse) {
+                                alert("Opened cloud project. To protect your work, changes will be saved to your local folder:\n\n" + filepathToUse.replace(/\//g, '\\'));
+                            } else {
+                                alert("Opened cloud project. Since no local directory is configured, please use 'File -> Save As' to select a local folder to save your project.");
+                            }
+                        }
+                        
+                        appSettings.currentProjectFile = filepathToUse;
+                        const finalName = filepathToUse ? filepathToUse.split('\\').pop().split('/').pop().replace(/\.(rsp|ksp)$/i, '') : "Untitled Project";
                         updateProjectName(finalName);
                         saveSettings();
                         initializeEnvironment();
-                        addToRecent(result.filepath);
+                        if (filepathToUse) {
+                            addToRecent(filepathToUse);
+                        }
                         document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
                     } catch (err) { alert("Invalid project file."); }
                 } else if (result && result.error) {
@@ -1086,6 +1191,41 @@ function saveSettings() {
     }
 }
 
+function isCloudPath(filePath) {
+    if (!filePath) return false;
+    const lowerPath = filePath.toLowerCase();
+    
+    // Check if it matches user configured cloud folders
+    if (appSettings.cloudDir) {
+        const normCloud = appSettings.cloudDir.toLowerCase().replace(/\\/g, '/');
+        const normFile = filePath.toLowerCase().replace(/\\/g, '/');
+        if (normFile.startsWith(normCloud)) {
+            return true;
+        }
+    }
+    if (appSettings.sharedFolderRoot) {
+        const normShared = appSettings.sharedFolderRoot.toLowerCase().replace(/\\/g, '/');
+        const normFile = filePath.toLowerCase().replace(/\\/g, '/');
+        if (normFile.startsWith(normShared)) {
+            return true;
+        }
+    }
+    
+    // Check for common cloud directory keywords
+    if (lowerPath.includes('google drive') || 
+        lowerPath.includes('gdrive') || 
+        lowerPath.includes('onedrive') || 
+        lowerPath.includes('dropbox') || 
+        lowerPath.includes('boxsync') || 
+        lowerPath.includes('icloud') || 
+        lowerPath.includes('my drive') || 
+        lowerPath.includes('shared drives') ||
+        lowerPath.includes('google-drive')) {
+        return true;
+    }
+    return false;
+}
+
 function loadCurrentDocument() {
     editor.innerHTML = appSettings.projectDocuments[currentDocument] || '<p class="action">&#8203;</p>';
     editor.setAttribute('data-docname', currentDocument);
@@ -1103,9 +1243,11 @@ function loadCurrentDocument() {
     }
 }
 
-function saveCurrentDocument() {
+function saveCurrentDocument(forceSaveSettings = false) {
     appSettings.projectDocuments[currentDocument] = editor.innerHTML;
-    saveSettings();
+    if (appSettings.enableAutoSave || forceSaveSettings) {
+        saveSettings();
+    }
 }
 
 const newProjectModal = document.getElementById('new-project-modal');
@@ -1229,12 +1371,31 @@ async function handleOpenProject() {
                 }
 
                 currentDocument = Object.keys(parsed)[0] || 'Main Script';
-                appSettings.currentProjectFile = result.filepath;
-                const filename = result.filepath.split('\\').pop().split('/').pop().replace(/\.(rsp|ksp)$/i, '');
+                
+                // Redirect path if it is a cloud file
+                let filepathToUse = result.filepath;
+                if (isCloudPath(filepathToUse)) {
+                    const filename = filepathToUse.split('\\').pop().split('/').pop();
+                    if (appSettings.localDir) {
+                        filepathToUse = appSettings.localDir + '\\' + filename;
+                    } else {
+                        filepathToUse = null; 
+                    }
+                    if (filepathToUse) {
+                        alert("Opened cloud project. To protect your work, changes will be saved to your local folder:\n\n" + filepathToUse.replace(/\//g, '\\'));
+                    } else {
+                        alert("Opened cloud project. Since no local directory is configured, please use 'File -> Save As' to select a local folder to save your project.");
+                    }
+                }
+                
+                appSettings.currentProjectFile = filepathToUse;
+                const filename = filepathToUse ? filepathToUse.split('\\').pop().split('/').pop().replace(/\.(rsp|ksp)$/i, '') : "Untitled Project";
                 updateProjectName(filename);
                 saveSettings();
                 initializeEnvironment();
-                addToRecent(result.filepath);
+                if (filepathToUse) {
+                    addToRecent(filepathToUse);
+                }
             } catch (e) { alert("Invalid project file."); }
         } else if (result && result.error) { alert(result.error); }
     } else { alert("Native opening requires the Python app wrapper."); }
@@ -1243,11 +1404,31 @@ async function handleOpenProject() {
 document.getElementById('file-menu-open').addEventListener('click', handleOpenProject);
 
 async function handleSave() {
-    saveCurrentDocument();
+    saveCurrentDocument(true);
     const projectData = JSON.stringify(appSettings.projectDocuments);
 
     if (window.pywebview) {
         if (appSettings.currentProjectFile) {
+            // Check if current file is in cloud
+            if (isCloudPath(appSettings.currentProjectFile)) {
+                // Redirect to local path!
+                let localPath = null;
+                if (appSettings.localDir) {
+                    const safeName = (appSettings.projectName || "Untitled Project").replace(/[\/:*?"<>|]/g, "");
+                    localPath = appSettings.localDir + '\\' + safeName + '.rsp';
+                }
+                
+                if (localPath) {
+                    appSettings.currentProjectFile = localPath;
+                    saveSettings();
+                    alert("Warning: Saving directly to Google Drive/Cloud folders is disabled to protect shared project files.\n\nYour changes have been redirected and saved to your local folder:\n" + localPath.replace(/\//g, '\\'));
+                } else {
+                    alert("Warning: Saving directly to Google Drive/Cloud folders is disabled to protect shared project files.\n\nPlease choose a local directory to save your project.");
+                    handleSaveAs();
+                    return;
+                }
+            }
+            
             // Already has a file, just overwrite it
             const result = await window.pywebview.api.save_project(projectData, appSettings.currentProjectFile);
             if (result && !result.startsWith("Error")) {
@@ -1266,17 +1447,22 @@ async function handleSave() {
 }
 
 async function handleSaveAs() {
-    saveCurrentDocument();
+    saveCurrentDocument(true);
     const projectData = JSON.stringify(appSettings.projectDocuments);
     const projectName = appSettings.projectName || "Untitled Project";
 
     if (window.pywebview) {
         const result = await window.pywebview.api.save_project_dialog(projectData, projectName);
         if (result && !result.startsWith("Error")) {
+            if (isCloudPath(result)) {
+                alert("Error: Saving directly to Google Drive/Cloud folders is disabled.\nPlease select a local folder to save your project, then use Share -> Save Latest to Cloud to share a copy.");
+                return;
+            }
             appSettings.currentProjectFile = result;
             const filename = result.split('\\').pop().split('/').pop().replace(/\.(rsp|ksp)$/i, '');
             updateProjectName(filename);
             addToRecent(result);
+            saveSettings();
             alert("Project saved as successfully!\n\nLocation: " + result.replace(/\//g, '\\'));
             applySettingsToUI();
         } else if (result) {
@@ -1342,12 +1528,16 @@ document.getElementById('file-menu-duplicate').addEventListener('click', () => {
 
 // Smart Cloud Auto-Save Trigger
 let backupTimeout;
-function triggerBackup() {
+function triggerBackup(force = false) {
+    if (!appSettings.enableAutoSave && !force) {
+        appSettings.projectDocuments[currentDocument] = editor.innerHTML;
+        return;
+    }
     syncDot.style.backgroundColor = '#f59e0b';
     syncText.textContent = 'Saving Changes...';
     clearTimeout(backupTimeout);
     backupTimeout = setTimeout(async () => {
-        saveCurrentDocument(); // Update Memory & settings.json
+        saveCurrentDocument(force); // Update Memory & settings.json (only save settings to disk if force)
 
         const updateTime = () => {
             const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1365,13 +1555,35 @@ function triggerBackup() {
                 appSettings.projectName,
                 appSettings.maxBackupLimit || 5
             ).then(response => {
-                syncDot.style.backgroundColor = '#10b981';
-                syncText.textContent = response;
+                if (appSettings.enableAutoSave) {
+                    syncDot.style.backgroundColor = '#10b981';
+                    syncText.textContent = response;
+                } else {
+                    syncDot.style.backgroundColor = '#10b981';
+                    syncText.textContent = response;
+                    setTimeout(() => {
+                        if (!appSettings.enableAutoSave) {
+                            syncDot.style.backgroundColor = '#4a5568';
+                            syncText.textContent = 'Auto-Save Disabled';
+                        }
+                    }, 3000);
+                }
                 updateTime();
             });
         } else {
-            syncDot.style.backgroundColor = '#10b981';
-            syncText.textContent = 'Saved to Settings (Browser Mode)';
+            if (appSettings.enableAutoSave) {
+                syncDot.style.backgroundColor = '#10b981';
+                syncText.textContent = 'Saved to Settings (Browser Mode)';
+            } else {
+                syncDot.style.backgroundColor = '#10b981';
+                syncText.textContent = 'Saved to Settings (Browser Mode)';
+                setTimeout(() => {
+                    if (!appSettings.enableAutoSave) {
+                        syncDot.style.backgroundColor = '#4a5568';
+                        syncText.textContent = 'Auto-Save Disabled';
+                    }
+                }, 3000);
+            }
             updateTime();
         }
     }, 1200);
@@ -1599,6 +1811,7 @@ const backupModal = document.getElementById('backup-modal');
 let autoSaveTimer = null;
 function startAutoSaveInterval() {
     clearInterval(autoSaveTimer);
+    if (!appSettings.enableAutoSave) return;
     const minutes = parseInt(appSettings.autoSaveInterval, 10);
     if (!isNaN(minutes) && minutes > 0) {
         autoSaveTimer = setInterval(() => {
@@ -1611,6 +1824,12 @@ document.getElementById('auto-save-interval').addEventListener('change', (e) => 
     appSettings.autoSaveInterval = parseInt(e.target.value, 10);
     saveSettings();
     startAutoSaveInterval();
+});
+
+document.getElementById('chk-enable-autosave').addEventListener('change', (e) => {
+    appSettings.enableAutoSave = !!e.target.checked;
+    saveSettings();
+    applySettingsToUI();
 });
 
 document.getElementById('max-backup-limit').addEventListener('change', (e) => {
@@ -5106,7 +5325,9 @@ let charSortAsc = true;
 
 function openCharSheet() {
     if (!appSettings.projectDocuments['MindMapData']) {
-        window.generateMindmapData();
+        const data = window.generateMindmapData();
+        appSettings.projectDocuments['MindMapData'] = JSON.stringify(data);
+        saveSettings();
     }
     charSheetData = JSON.parse(appSettings.projectDocuments['MindMapData']);
     if (!charSheetData.groups) charSheetData.groups = { scenes: [], characters: [] };

@@ -330,6 +330,13 @@
             <h2>💽 Manage Backups & Auto-Save <span title="Backups are physical .rsp files automatically saved to your hard drive or cloud. They act as your safety net against computer crashes." style="cursor:help; font-size:14px; opacity:0.7;">❔</span></h2>
             <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; margin-top: 5px;">Automatically save hard copies of your project to your computer or cloud drive.</p>
             
+            <div class="backup-option" style="margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; cursor: pointer; color: white;">
+                    <input type="checkbox" id="chk-enable-autosave" style="width: 16px; height: 16px; cursor: pointer;">
+                    Enable Automatic Saving (Auto-Save on typing & intervals)
+                </label>
+            </div>
+
             <div style="display: flex; gap: 15px; margin-bottom: 15px;">
                 <div class="backup-option" style="flex: 1; margin-bottom: 0;">
                     <h3>⏳ Auto-Save Interval</h3>
@@ -603,7 +610,7 @@
         <div class="modal-content" style="width: 400px; text-align: center;">
             <img src="xenohead_logo.png" alt="XenoHead Logo" style="width: 120px; height: 120px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
             <h2 style="margin: 0; font-family: 'Outfit', sans-serif; color: #f8fafc;">ReelScript</h2>
-            <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 5px;">Version <span id="about-version">2.8.0</span></p>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 5px;">Version <span id="about-version">2.9.7</span></p>
             <div style="margin: 20px 0; padding: 15px; background: #131a2c; border-radius: 8px; border: 1px solid #2d3748;">
                 <p style="margin: 0; color: #e2e8f0; font-weight: bold;">Built by XenoHead</p>
                 <a href="#" onclick="window.pywebview ? window.pywebview.api.open_url('https://www.xenohead.com') : window.open('https://www.xenohead.com','_blank')" style="color: #1b8adb; text-decoration: none; font-size: 0.9rem; display: block; margin-top: 5px;">www.xenohead.com</a>

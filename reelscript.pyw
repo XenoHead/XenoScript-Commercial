@@ -186,8 +186,22 @@ print(file)
                 return f"Error: {str(e)}"
         return None
 
+    def is_cloud_path(self, filepath):
+        if not filepath:
+            return False
+        lower_path = filepath.lower()
+        cloud_keywords = [
+            "google drive", "gdrive", "onedrive", "dropbox", 
+            "boxsync", "icloud", "my drive", "shared drives", "google-drive"
+        ]
+        if any(kw in lower_path for kw in cloud_keywords):
+            return True
+        return False
+
     def save_project(self, content, filepath):
         try:
+            if self.is_cloud_path(filepath):
+                return "Error: Saving directly to Google Drive/Cloud folders is disabled to protect shared project files. Please save to a local folder, then use the Share feature to copy it to the cloud."
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(content)
             return filepath
@@ -236,6 +250,9 @@ folder = filedialog.askdirectory(parent=root, title="Select Backup Folder")
 print(folder)
 """
         return run_dialog_script(script)
+
+    def get_default_local_dir(self):
+        return self.app_data_dir
 
     def open_file_dialog(self):
         script = """
@@ -850,6 +867,27 @@ print(file)
                 pass
         return "OK"
 
+    def get_local_copy_if_cloud(self, current_file, local_dir, project_name):
+        if not current_file or not local_dir or not project_name:
+            return None
+        try:
+            norm_current = os.path.normpath(current_file).lower()
+            norm_local_dir = os.path.normpath(local_dir).lower()
+            if norm_current.startswith(norm_local_dir):
+                return None
+            
+            safe_name = "".join(c for c in project_name if c not in r'\/:*?"<>|')
+            local_path = os.path.join(local_dir, f"{safe_name}.rsp")
+            if os.path.exists(local_path):
+                with open(local_path, "r", encoding="utf-8") as f:
+                    return {
+                        "filepath": local_path,
+                        "data": f.read()
+                    }
+        except Exception:
+            pass
+        return None
+
     def load_latest_cloud(self, cloud_dir, project_name):
         if not cloud_dir or not os.path.exists(cloud_dir):
             return {"error": "Cloud directory not found or not configured. Please set it in 'Manage Backups'."}
@@ -909,8 +947,8 @@ print(file)
 
     # Default version info bundled with the app (used for first-install seeding)
     DEFAULT_VERSION = {
-        "version": "2.8.0",
-        "last_updated": "2026-05-31",
+        "version": "2.9.7",
+        "last_updated": "2026-06-03",
         "changelog": [
             "Added prompt confirmation before overwriting with cloud version."
         ]
@@ -1190,7 +1228,7 @@ if __name__ == '__main__':
 
         icon_filename = 'movie-icon.ico' if os.name == 'nt' else 'movie-icon.png'
         icon_path = os.path.join(current_dir, icon_filename)
-        if os.path.exists(icon_path):
+        if os.name == 'nt' and os.path.exists(icon_path):
             webview.start(icon=icon_path, debug=False)
         else:
             webview.start(debug=False)

@@ -12,7 +12,7 @@
 ; ============================================================
 
 #define AppName        "ReelScript"
-#define AppVersion     "2.8.0"
+#define AppVersion     "2.9.7"
 #define AppPublisher   "XenoHead"
 #define AppURL         "https://github.com/XENOHEAD/reelscript"
 #define AppExeName     "ReelScript.exe"
