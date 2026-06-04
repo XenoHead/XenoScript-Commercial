@@ -797,7 +797,7 @@ window.addEventListener('pywebviewready', async () => {
                     // It is a cloud path, and we have no local copy yet!
                     const safeName = appSettings.projectName.replace(/[\\/:*?"<>|]/g, '');
                     const localPath = appSettings.localDir + '\\' + safeName + '.rsp';
-                    
+
                     if (appSettings.enableAutoSave) {
                         // Create the local copy using the current projectDocuments
                         const projectData = JSON.stringify(appSettings.projectDocuments);
@@ -806,7 +806,7 @@ window.addEventListener('pywebviewready', async () => {
                     } else {
                         console.log("Redirected startup to local copy in-memory (no file created yet):", localPath);
                     }
-                    
+
                     appSettings.currentProjectFile = localPath;
                 }
             }
@@ -833,7 +833,7 @@ window.addEventListener('pywebviewready', async () => {
             }
 
             currentDocument = Object.keys(parsed)[0] || 'Main Script';
-            
+
             // Redirect path if initialFile is a cloud path
             let filepathToUse = initialFile.filepath;
             if (isCloudPath(filepathToUse)) {
@@ -849,7 +849,7 @@ window.addEventListener('pywebviewready', async () => {
                     alert("Opened cloud project. Since no local directory is configured, please use 'File -> Save As' to select a local folder to save your project.");
                 }
             }
-            
+
             appSettings.currentProjectFile = filepathToUse;
             const filename = filepathToUse ? filepathToUse.split('\\').pop().split('/').pop().replace(/\.(rsp|ksp)$/i, '') : "Untitled Project";
             updateProjectName(filename);
@@ -1145,7 +1145,7 @@ function updateRecentProjectsUI() {
                         }
 
                         currentDocument = Object.keys(parsed)[0] || 'Main Script';
-                        
+
                         // Redirect path if it is a cloud file
                         let filepathToUse = result.filepath;
                         if (isCloudPath(filepathToUse)) {
@@ -1161,7 +1161,7 @@ function updateRecentProjectsUI() {
                                 alert("Opened cloud project. Since no local directory is configured, please use 'File -> Save As' to select a local folder to save your project.");
                             }
                         }
-                        
+
                         appSettings.currentProjectFile = filepathToUse;
                         const finalName = filepathToUse ? filepathToUse.split('\\').pop().split('/').pop().replace(/\.(rsp|ksp)$/i, '') : "Untitled Project";
                         updateProjectName(finalName);
@@ -1194,7 +1194,7 @@ function saveSettings() {
 function isCloudPath(filePath) {
     if (!filePath) return false;
     const lowerPath = filePath.toLowerCase();
-    
+
     // Check if it matches user configured cloud folders
     if (appSettings.cloudDir) {
         const normCloud = appSettings.cloudDir.toLowerCase().replace(/\\/g, '/');
@@ -1210,15 +1210,15 @@ function isCloudPath(filePath) {
             return true;
         }
     }
-    
+
     // Check for common cloud directory keywords
-    if (lowerPath.includes('google drive') || 
-        lowerPath.includes('gdrive') || 
-        lowerPath.includes('onedrive') || 
-        lowerPath.includes('dropbox') || 
-        lowerPath.includes('boxsync') || 
-        lowerPath.includes('icloud') || 
-        lowerPath.includes('my drive') || 
+    if (lowerPath.includes('google drive') ||
+        lowerPath.includes('gdrive') ||
+        lowerPath.includes('onedrive') ||
+        lowerPath.includes('dropbox') ||
+        lowerPath.includes('boxsync') ||
+        lowerPath.includes('icloud') ||
+        lowerPath.includes('my drive') ||
         lowerPath.includes('shared drives') ||
         lowerPath.includes('google-drive')) {
         return true;
@@ -1371,7 +1371,7 @@ async function handleOpenProject() {
                 }
 
                 currentDocument = Object.keys(parsed)[0] || 'Main Script';
-                
+
                 // Redirect path if it is a cloud file
                 let filepathToUse = result.filepath;
                 if (isCloudPath(filepathToUse)) {
@@ -1379,7 +1379,7 @@ async function handleOpenProject() {
                     if (appSettings.localDir) {
                         filepathToUse = appSettings.localDir + '\\' + filename;
                     } else {
-                        filepathToUse = null; 
+                        filepathToUse = null;
                     }
                     if (filepathToUse) {
                         alert("Opened cloud project. To protect your work, changes will be saved to your local folder:\n\n" + filepathToUse.replace(/\//g, '\\'));
@@ -1387,7 +1387,7 @@ async function handleOpenProject() {
                         alert("Opened cloud project. Since no local directory is configured, please use 'File -> Save As' to select a local folder to save your project.");
                     }
                 }
-                
+
                 appSettings.currentProjectFile = filepathToUse;
                 const filename = filepathToUse ? filepathToUse.split('\\').pop().split('/').pop().replace(/\.(rsp|ksp)$/i, '') : "Untitled Project";
                 updateProjectName(filename);
@@ -1417,7 +1417,7 @@ async function handleSave() {
                     const safeName = (appSettings.projectName || "Untitled Project").replace(/[\/:*?"<>|]/g, "");
                     localPath = appSettings.localDir + '\\' + safeName + '.rsp';
                 }
-                
+
                 if (localPath) {
                     appSettings.currentProjectFile = localPath;
                     saveSettings();
@@ -1428,7 +1428,7 @@ async function handleSave() {
                     return;
                 }
             }
-            
+
             // Already has a file, just overwrite it
             const result = await window.pywebview.api.save_project(projectData, appSettings.currentProjectFile);
             if (result && !result.startsWith("Error")) {
@@ -2038,17 +2038,17 @@ document.addEventListener('click', (e) => {
 docList.addEventListener('contextmenu', (e) => {
     const item = e.target.closest('.sidebar-item');
     if (!item || item.id === 'add-document-btn') return;
-    
+
     e.preventDefault();
     docContextMenu.targetDoc = item.dataset.docname;
-    
+
     docContextMenu.style.display = 'block';
     let x = e.clientX;
     let y = e.clientY;
-    
+
     if (x + docContextMenu.offsetWidth > window.innerWidth) x = window.innerWidth - docContextMenu.offsetWidth;
     if (y + docContextMenu.offsetHeight > window.innerHeight) y = window.innerHeight - docContextMenu.offsetHeight;
-    
+
     docContextMenu.style.top = `${y}px`;
     docContextMenu.style.left = `${x}px`;
 });
@@ -2057,7 +2057,7 @@ function swapDocs(docName, direction) {
     docContextMenu.style.display = 'none';
     const docs = Object.keys(appSettings.projectDocuments);
     const idx = docs.indexOf(docName);
-    
+
     if (direction === 'up' && idx > 0) {
         const temp = docs[idx - 1];
         docs[idx - 1] = docName;
@@ -2069,11 +2069,11 @@ function swapDocs(docName, direction) {
     } else {
         return;
     }
-    
+
     const newDocs = {};
     docs.forEach(key => newDocs[key] = appSettings.projectDocuments[key]);
     appSettings.projectDocuments = newDocs;
-    
+
     saveSettings();
     rebuildDocumentSidebar();
 }
@@ -2093,16 +2093,16 @@ document.getElementById('ctx-doc-rename').addEventListener('click', (e) => {
     docContextMenu.style.display = 'none';
     const oldName = docContextMenu.targetDoc;
     if (!oldName) return;
-    
+
     const newName = prompt(`Rename "${oldName}" to:`, oldName);
     if (!newName || newName === oldName) return;
     if (appSettings.projectDocuments[newName]) {
         alert("A document with that name already exists!");
         return;
     }
-    
+
     saveCurrentDocument(); // Ensure current doc is saved before renaming it
-    
+
     const docs = Object.keys(appSettings.projectDocuments);
     const newDocs = {};
     docs.forEach(key => {
@@ -2112,15 +2112,15 @@ document.getElementById('ctx-doc-rename').addEventListener('click', (e) => {
             newDocs[key] = appSettings.projectDocuments[key];
         }
     });
-    
+
     appSettings.projectDocuments = newDocs;
     if (currentDocument === oldName) {
         currentDocument = newName;
     }
-    
+
     saveSettings();
     rebuildDocumentSidebar();
-    
+
     if (currentDocument === newName) {
         loadCurrentDocument();
     }
@@ -2131,12 +2131,12 @@ document.getElementById('ctx-doc-delete').addEventListener('click', (e) => {
     docContextMenu.style.display = 'none';
     const docName = docContextMenu.targetDoc;
     if (!docName) return;
-    
+
     if (Object.keys(appSettings.projectDocuments).length <= 1) {
         alert("You cannot delete the last document.");
         return;
     }
-    
+
     if (confirm(`Are you sure you want to delete "${docName}"? This cannot be undone.`)) {
         delete appSettings.projectDocuments[docName];
         if (currentDocument === docName) {
@@ -3428,7 +3428,7 @@ if (helpAbout) {
         const aboutModal = document.getElementById('about-modal');
         const aboutVersion = document.getElementById('about-version');
         const btnCloseAbout = document.getElementById('btn-close-about');
-        
+
         if (aboutVersion && typeof APP_VERSION !== 'undefined') {
             aboutVersion.innerText = APP_VERSION;
         }
@@ -5375,7 +5375,7 @@ function openCharSheet() {
     charSheetData = JSON.parse(appSettings.projectDocuments['MindMapData']);
     if (!charSheetData.groups) charSheetData.groups = { scenes: [], characters: [] };
     if (!charSheetData.groups.characters) charSheetData.groups.characters = [];
-    
+
     // Restore sort settings
     if (appSettings.charSheetSortValue !== undefined) {
         charSheetSort.value = appSettings.charSheetSortValue;
@@ -5390,7 +5390,7 @@ function openCharSheet() {
             compactToggle.checked = appSettings.charSheetCompact;
         }
     }
-    
+
     renderCharSheetSidebar();
     renderCharSheetList();
     charSheetModal.style.display = 'flex';
@@ -5408,13 +5408,13 @@ function saveCharSheetData() {
 
 function renderCharSheetSidebar() {
     charSheetSidebarGroups.innerHTML = '';
-    
+
     const createSidebarBtn = (id, label, icon, isCustom, index) => {
         const container = document.createElement('div');
         container.style.display = 'flex';
         container.style.gap = '2px';
         container.style.marginBottom = '4px';
-        
+
         const btn = document.createElement('button');
         btn.className = 'modal-btn';
         btn.style.flex = '1';
@@ -5433,9 +5433,9 @@ function renderCharSheetSidebar() {
             renderCharSheetSidebar();
             renderCharSheetList();
         });
-        
+
         container.appendChild(btn);
-        
+
         if (isCustom) {
             const arr = charSheetData.groups.characters;
             const actionContainer = document.createElement('div');
@@ -5443,7 +5443,7 @@ function renderCharSheetSidebar() {
             actionContainer.style.flexDirection = 'column';
             actionContainer.style.gap = '1px';
             actionContainer.style.width = '20px';
-            
+
             if (index > 0) {
                 const upBtn = document.createElement('button');
                 upBtn.innerHTML = '▲';
@@ -5467,7 +5467,7 @@ function renderCharSheetSidebar() {
                 spacer.style.flex = '1';
                 actionContainer.appendChild(spacer);
             }
-            
+
             if (index < arr.length - 1) {
                 const dnBtn = document.createElement('button');
                 dnBtn.innerHTML = '▼';
@@ -5491,9 +5491,9 @@ function renderCharSheetSidebar() {
                 spacer.style.flex = '1';
                 actionContainer.appendChild(spacer);
             }
-            
+
             container.appendChild(actionContainer);
-            
+
             const delBtn = document.createElement('button');
             delBtn.innerHTML = '×';
             delBtn.style.background = 'transparent';
@@ -5503,7 +5503,7 @@ function renderCharSheetSidebar() {
             delBtn.style.fontSize = '14px';
             delBtn.style.padding = '0 5px';
             delBtn.onclick = () => {
-                if(confirm('Delete group ' + label + '? Characters inside will become ungrouped.')) {
+                if (confirm('Delete group ' + label + '? Characters inside will become ungrouped.')) {
                     charSheetData.characters.forEach(c => {
                         if (c.groupId === id) delete c.groupId;
                     });
@@ -5516,13 +5516,13 @@ function renderCharSheetSidebar() {
             };
             container.appendChild(delBtn);
         }
-        
+
         return container;
     };
-    
+
     charSheetSidebarGroups.appendChild(createSidebarBtn('all', 'All Characters', '🌍', false));
     charSheetSidebarGroups.appendChild(createSidebarBtn('ungrouped', 'Ungrouped', '📁', false));
-    
+
     charSheetData.groups.characters.forEach((g, idx) => {
         charSheetSidebarGroups.appendChild(createSidebarBtn(g.id, g.name, '📂', true, idx));
     });
@@ -5531,14 +5531,14 @@ function renderCharSheetSidebar() {
 function renderCharSheetList() {
     charSheetList.innerHTML = '';
     let chars = [...charSheetData.characters];
-    
+
     // Filter by group
     if (activeCharGroupId === 'ungrouped') {
         chars = chars.filter(c => !c.groupId);
     } else if (activeCharGroupId !== 'all') {
         chars = chars.filter(c => c.groupId === activeCharGroupId);
     }
-    
+
     // Sort
     const sortProp = charSheetSort.value;
     chars.sort((a, b) => {
@@ -5553,47 +5553,47 @@ function renderCharSheetList() {
             valA = a.scenes ? a.scenes.length : 0;
             valB = b.scenes ? b.scenes.length : 0;
         }
-        
+
         if (valA < valB) return charSortAsc ? -1 : 1;
         if (valA > valB) return charSortAsc ? 1 : -1;
         return 0;
     });
-    
+
     const isCompact = document.getElementById('char-sheet-compact-toggle') ? document.getElementById('char-sheet-compact-toggle').checked : false;
-    
+
     chars.forEach(char => {
         const charEl = document.createElement('div');
         charEl.style.background = '#1a222c';
         charEl.style.border = '1px solid #36424e';
         charEl.style.borderRadius = '6px';
         charEl.style.padding = isCompact ? '8px' : '15px';
-        
+
         const header = document.createElement('div');
         header.style.display = 'flex';
         header.style.justifyContent = 'space-between';
         header.style.alignItems = 'center';
         header.style.marginBottom = isCompact ? '5px' : '10px';
-        
+
         const titleArea = document.createElement('div');
         const nameTitle = document.createElement('h4');
         nameTitle.style.margin = '0 0 2px 0';
         nameTitle.style.color = '#f8fafc';
         nameTitle.style.fontSize = isCompact ? '14px' : '16px';
         nameTitle.textContent = char.name;
-        
+
         const statsStr = `Scenes: ${char.scenes ? char.scenes.length : 0} | Lines: ${char.dialogueCount || 0}`;
         const statsLabel = document.createElement('div');
         statsLabel.style.fontSize = '12px';
         statsLabel.style.color = '#94a3b8';
         statsLabel.textContent = statsStr;
-        
+
         titleArea.appendChild(nameTitle);
         titleArea.appendChild(statsLabel);
-        
+
         const actions = document.createElement('div');
         actions.style.display = 'flex';
         actions.style.gap = '5px';
-        
+
         const btnOpen = document.createElement('button');
         btnOpen.textContent = 'Open';
         btnOpen.className = 'modal-btn';
@@ -5606,7 +5606,7 @@ function renderCharSheetList() {
             document.getElementById('char-sheet-focus-modal').style.display = 'flex';
             window.activeCharSheetFocus = char.name; // Store reference to active character
         };
-        
+
         const btnSave = document.createElement('button');
         btnSave.textContent = 'Save';
         btnSave.className = 'modal-btn';
@@ -5624,7 +5624,7 @@ function renderCharSheetList() {
             btnSave.textContent = 'Saved!';
             setTimeout(() => btnSave.textContent = 'Save', 1500);
         };
-        
+
         const btnGrp = document.createElement('button');
         btnGrp.textContent = 'Group';
         btnGrp.className = 'modal-btn';
@@ -5644,7 +5644,7 @@ function renderCharSheetList() {
                 renderCharSheetList();
             }
         };
-        
+
         const btnRename = document.createElement('button');
         btnRename.textContent = 'Rename';
         btnRename.className = 'modal-btn';
@@ -5665,7 +5665,7 @@ function renderCharSheetList() {
                 renderCharSheetList();
             }
         };
-        
+
         const btnDel = document.createElement('button');
         btnDel.textContent = 'Delete';
         btnDel.className = 'modal-btn';
@@ -5679,16 +5679,16 @@ function renderCharSheetList() {
                 renderCharSheetList();
             }
         };
-        
+
         actions.appendChild(btnOpen);
         actions.appendChild(btnSave);
         actions.appendChild(btnGrp);
         actions.appendChild(btnRename);
         actions.appendChild(btnDel);
-        
+
         header.appendChild(titleArea);
         header.appendChild(actions);
-        
+
         const textArea = document.createElement('textarea');
         textArea.style.width = '100%';
         textArea.style.minHeight = isCompact ? '40px' : '100px';
@@ -5712,7 +5712,7 @@ function renderCharSheetList() {
                 window.pywebview.api.update_character_note(char.name, textArea.value);
             }
         });
-        
+
         charEl.appendChild(header);
         charEl.appendChild(textArea);
         charSheetList.appendChild(charEl);
@@ -5796,7 +5796,7 @@ if (btnSaveCharFocus) {
         if (window.activeCharSheetFocus && charSheetData) {
             const charName = window.activeCharSheetFocus;
             const newNotes = document.getElementById('char-sheet-focus-textarea').value;
-            
+
             const char = charSheetData.characters.find(c => c.name === charName);
             if (char) {
                 char.notes = newNotes;
@@ -5843,7 +5843,7 @@ if (btnToolsCapitalizeNames) {
             // Extract unique names from character blocks in the editor
             const uniqueNames = new Set();
             const paragraphs = Array.from(editor.querySelectorAll('p'));
-            
+
             paragraphs.forEach(p => {
                 if (p.classList.contains('character')) {
                     // Strip parentheticals like "JOHN (V.O.)" and remove zero-width spaces
@@ -5851,7 +5851,7 @@ if (btnToolsCapitalizeNames) {
                     if (name) uniqueNames.add(name);
                 }
             });
-            
+
             // Also grab from charSheetData if loaded
             if (typeof charSheetData !== 'undefined' && charSheetData && charSheetData.characters) {
                 charSheetData.characters.forEach(c => {
@@ -5865,9 +5865,9 @@ if (btnToolsCapitalizeNames) {
                             if (c.name) uniqueNames.add(c.name.replace(/[\u200B]/g, '').trim().toUpperCase());
                         });
                     }
-                } catch(e) {}
+                } catch (e) { }
             }
-            
+
             capNamesList.innerHTML = '';
             if (uniqueNames.size === 0) {
                 capNamesList.innerHTML = '<div style="color: #94a3b8; font-size: 13px; text-align: center; padding: 10px;">No character names found in the script.</div>';
@@ -5876,7 +5876,7 @@ if (btnToolsCapitalizeNames) {
             } else {
                 btnExecuteCapNames.disabled = false;
                 btnExecuteCapNames.style.opacity = '1';
-                
+
                 const sortedNames = Array.from(uniqueNames).sort();
                 sortedNames.forEach(name => {
                     const label = document.createElement('label');
@@ -5887,18 +5887,18 @@ if (btnToolsCapitalizeNames) {
                     label.style.color = '#e2e8f0';
                     label.style.fontSize = '14px';
                     label.style.padding = '4px 0';
-                    
+
                     const cb = document.createElement('input');
                     cb.type = 'checkbox';
                     cb.value = name;
                     cb.checked = true;
-                    
+
                     label.appendChild(cb);
                     label.appendChild(document.createTextNode(name));
                     capNamesList.appendChild(label);
                 });
             }
-            
+
             capNamesModal.style.display = 'flex';
         } catch (e) {
             alert('Error loading Capitalize Names: ' + e.message);
@@ -5933,30 +5933,30 @@ if (btnExecuteCapNames) {
     btnExecuteCapNames.addEventListener('click', () => {
         const checkboxes = capNamesList.querySelectorAll('input[type="checkbox"]:checked');
         const selectedNames = Array.from(checkboxes).map(cb => cb.value);
-        
+
         if (selectedNames.length === 0) {
             alert('No names selected.');
             return;
         }
-        
+
         // Sort names by length descending
         selectedNames.sort((a, b) => b.length - a.length);
-        
+
         let replacementsMade = 0;
-        
+
         // Build regexes
         const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const nameRegexes = selectedNames.map(name => ({
             name: name.toUpperCase(),
             regex: new RegExp('\\b' + escapeRegExp(name) + '\\b', 'gi')
         }));
-        
+
         function processTextNode(node) {
             if (node.nodeType === Node.TEXT_NODE) {
                 let originalText = node.nodeValue;
                 let newText = originalText;
-                
-                nameRegexes.forEach(({name, regex}) => {
+
+                nameRegexes.forEach(({ name, regex }) => {
                     const matches = newText.match(regex);
                     if (matches) {
                         matches.forEach(m => {
@@ -5967,7 +5967,7 @@ if (btnExecuteCapNames) {
                         newText = newText.replace(regex, name);
                     }
                 });
-                
+
                 if (originalText !== newText) {
                     node.nodeValue = newText;
                 }
@@ -5977,17 +5977,17 @@ if (btnExecuteCapNames) {
                 }
             }
         }
-        
+
         const paragraphs = Array.from(editor.querySelectorAll('p'));
         paragraphs.forEach(p => {
             if (!p.classList.contains('dialogue') && !p.classList.contains('character')) {
                 processTextNode(p);
             }
         });
-        
+
         triggerBackup();
         updateStats();
-        
+
         capNamesModal.style.display = 'none';
         alert(`Capitalization complete. Capitalized ${replacementsMade} name instances.`);
     });
@@ -6014,20 +6014,20 @@ if (textColorMenu && textColorDropdownContent && customTextColorPicker && miniTe
         document.execCommand('foreColor', false, hex);
         triggerBackup();
         updateStats();
-        
+
         // Update the button icon's bottom border color
         const iconSpan = miniTextColorBtn.querySelector('span');
         if (iconSpan) {
             iconSpan.style.borderBottomColor = hex;
         }
-        
+
         // Close dropdown
         document.querySelectorAll('.dropdown').forEach(m => m.classList.remove('open'));
     }
 
     function populateTextColorMenu() {
         textColorDropdownContent.innerHTML = '';
-        
+
         const colors = appSettings.elementColors || {};
         const elements = [
             { key: 'scene', label: 'Scene Heading' },
@@ -6038,7 +6038,7 @@ if (textColorMenu && textColorDropdownContent && customTextColorPicker && miniTe
             { key: 'transition', label: 'Transition' },
             { key: 'shot', label: 'Shot' }
         ];
-        
+
         let hasColors = false;
         elements.forEach(el => {
             if (colors[el.key]) {
@@ -6053,13 +6053,13 @@ if (textColorMenu && textColorDropdownContent && customTextColorPicker && miniTe
                 textColorDropdownContent.appendChild(item);
             }
         });
-        
+
         if (hasColors) {
             const divider = document.createElement('div');
             divider.className = 'dropdown-divider';
             textColorDropdownContent.appendChild(divider);
         }
-        
+
         const customItem = document.createElement('div');
         customItem.className = 'dropdown-item';
         customItem.innerHTML = `<span style="margin-right:8px;">🎨</span><span>Custom Color...</span>`;
@@ -6069,7 +6069,7 @@ if (textColorMenu && textColorDropdownContent && customTextColorPicker && miniTe
         });
         textColorDropdownContent.appendChild(customItem);
     }
-    
+
     customTextColorPicker.addEventListener('change', (e) => {
         if (e.target.value) {
             applyTextColor(e.target.value);

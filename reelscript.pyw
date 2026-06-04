@@ -1049,7 +1049,7 @@ print(file)
     # Default version info bundled with the app (used for first-install seeding)
     DEFAULT_VERSION = {
         "version": "2.9.7",
-        "last_updated": "2026-06-03",
+        "last_updated": "2026-06-04",
         "changelog": [
             "Added prompt confirmation before overwriting with cloud version."
         ]
