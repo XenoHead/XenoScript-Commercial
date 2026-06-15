@@ -2,7 +2,7 @@
 echo [2/3] Building executable with PyInstaller...
 echo       This may take 2-4 minutes. Please wait...
 python -m PyInstaller --noconfirm --onefile --windowed ^
-  --name "ReelScript" ^
+  --name "XenoScript" ^
   --icon "movie-icon.ico" ^
   --add-data "movie-icon.ico;." ^
   --add-data "movie-icon.png;." ^
@@ -11,7 +11,6 @@ python -m PyInstaller --noconfirm --onefile --windowed ^
   --add-data "script.js;." ^
   --add-data "version.json;." ^
   --add-data "editor.PY;." ^
-  --add-data "manual.html;." ^
   --add-data "writers_guide.html;." ^
   --add-data "writer_guide_hero.png;." ^
   --add-data "writer_guide_blueprint.png;." ^
@@ -28,4 +27,9 @@ python -m PyInstaller --noconfirm --onefile --windowed ^
   --hidden-import requests ^
   --hidden-import tkinter ^
   --hidden-import tkinter.filedialog ^
-  reelscript.pyw
+  xenoscript.pyw
+
+python -m PyInstaller --noconfirm --onefile --windowed ^
+  --name "XenoScriptUpdater" ^
+  --icon "movie-icon.ico" ^
+  xenoscript_updater.py

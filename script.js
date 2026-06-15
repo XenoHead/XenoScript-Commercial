@@ -736,7 +736,7 @@ window.addEventListener('pywebviewready', async () => {
             window.APP_VERSION = verInfo.version;
             const titleDisplay = document.getElementById('app-title-display');
             if (titleDisplay) {
-                titleDisplay.textContent = `ReelScript ${verInfo.version}`;
+                titleDisplay.textContent = `XenoScript ${verInfo.version}`;
             }
             const aboutVersion = document.getElementById('about-version');
             if (aboutVersion) {
@@ -796,7 +796,7 @@ window.addEventListener('pywebviewready', async () => {
                 if (!normCurrent.includes(normLocalDir)) {
                     // It is a cloud path, and we have no local copy yet!
                     const safeName = appSettings.projectName.replace(/[\\/:*?"<>|]/g, '');
-                    const localPath = appSettings.localDir + '\\' + safeName + '.rsp';
+                    const localPath = appSettings.localDir + '\\' + safeName + '.xsp';
 
                     if (appSettings.enableAutoSave) {
                         // Create the local copy using the current projectDocuments
@@ -868,7 +868,7 @@ window.addEventListener('pywebviewready', async () => {
             if (btnUpdate) {
                 btnUpdate.style.display = 'inline-block';
                 btnUpdate.addEventListener('click', () => {
-                    const msg = `ReelScript ${check.remote_version} is available!\n\n` +
+                    const msg = `XenoScript ${check.remote_version} is available!\n\n` +
                         `Your version: ${check.local_version}\n` +
                         `Latest version: ${check.remote_version}\n\n` +
                         `What's new:\n` + (check.changelog || []).map(c => `• ${c}`).join('\n') + `\n\n` +
@@ -910,7 +910,7 @@ function downloadAndInstallUpdate(btnElement) {
             }
         });
     } else {
-        window.open('https://github.com/XENOHEAD/reelscript/releases', '_blank');
+        window.open('https://github.com/XenoHead/XenoScript-Commercial/releases', '_blank');
         if (btnElement) {
             btnElement.innerText = "Update";
             btnElement.disabled = false;
@@ -1355,12 +1355,12 @@ document.getElementById('btn-create-new-project').addEventListener('click', asyn
         let savedPath = null;
 
         if (newLocalDir) {
-            savedPath = newLocalDir + '\\' + safeName + '.rsp';
+            savedPath = newLocalDir + '\\' + safeName + '.xsp';
             await window.pywebview.api.save_project(projectData, savedPath);
         }
 
         if (cloudFolderPath) {
-            const cloudPath = cloudFolderPath + '\\' + safeName + '.rsp';
+            const cloudPath = cloudFolderPath + '\\' + safeName + '.xsp';
             await window.pywebview.api.save_project(projectData, cloudPath);
             // If they didn't provide a local dir, fallback to cloud as current project
             if (!savedPath) {
@@ -1445,7 +1445,7 @@ async function handleSave() {
                 let localPath = null;
                 if (appSettings.localDir) {
                     const safeName = (appSettings.projectName || "Untitled Project").replace(/[\/:*?"<>|]/g, "");
-                    localPath = appSettings.localDir + '\\' + safeName + '.rsp';
+                    localPath = appSettings.localDir + '\\' + safeName + '.xsp';
                 }
 
                 if (localPath) {
@@ -1895,15 +1895,24 @@ document.getElementById('btn-select-local-dir').addEventListener('click', async 
     }
 });
 
-document.getElementById('btn-external-backups').addEventListener('click', () => {
-    backupModal.style.display = 'flex';
-});
-document.getElementById('file-menu-backups').addEventListener('click', () => {
-    backupModal.style.display = 'flex';
-});
-document.getElementById('btn-close-modal').addEventListener('click', () => {
-    backupModal.style.display = 'none';
-});
+const btnExternalBackups = document.getElementById('btn-external-backups');
+if (btnExternalBackups) {
+    btnExternalBackups.addEventListener('click', () => {
+        if (backupModal) backupModal.style.display = 'flex';
+    });
+}
+const fileMenuBackups = document.getElementById('file-menu-backups');
+if (fileMenuBackups) {
+    fileMenuBackups.addEventListener('click', () => {
+        if (backupModal) backupModal.style.display = 'flex';
+    });
+}
+const btnCloseModal = document.getElementById('btn-close-modal');
+if (btnCloseModal) {
+    btnCloseModal.addEventListener('click', () => {
+        if (backupModal) backupModal.style.display = 'none';
+    });
+}
 
 const btnTriggerBackupNow = document.getElementById('btn-trigger-backup-now');
 if (btnTriggerBackupNow) {
@@ -2247,7 +2256,7 @@ function handleExport(format) {
             syncText.textContent = response;
         });
     } else {
-        alert("Export requires running the Python app wrapper (reelscript.pyw).");
+        alert("Export requires running the Python app wrapper (xenoscript.pyw).");
     }
 }
 document.getElementById('export-pdf-sidebar-btn').addEventListener('click', () => handleExport('pdf'));
@@ -3318,6 +3327,15 @@ if (changelogModal) {
 }
 
 document.getElementById('share-gdrive').addEventListener('click', () => {
+    if (appSettings.sharedFolderLink && appSettings.sharedFolderLink.startsWith('http')) {
+        if (window.pywebview) {
+            window.pywebview.api.open_url(appSettings.sharedFolderLink);
+        } else {
+            window.open(appSettings.sharedFolderLink, '_blank');
+        }
+        return;
+    }
+
     const root = appSettings.sharedFolderRoot || appSettings.cloudDir;
     if (!root) {
         alert("No shared folder root configured.\n\nGo to Share → Configure Shared Folder to set one.");
@@ -3333,15 +3351,27 @@ document.getElementById('share-gdrive').addEventListener('click', () => {
 });
 
 document.getElementById('share-configure').addEventListener('click', async () => {
-    if (window.pywebview) {
-        const folder = await window.pywebview.api.choose_directory();
-        if (folder) {
-            appSettings.sharedFolderRoot = folder;
+    const choice = confirm("Do you want to paste a web link for the shared folder?\n\nClick OK to enter a web link (URL), or click Cancel to select a local synced folder.");
+    
+    if (choice) {
+        const link = prompt("Enter the Google Drive folder link:", appSettings.sharedFolderLink || "");
+        if (link !== null) {
+            appSettings.sharedFolderLink = link.trim();
             saveSettings();
-            alert("Shared root folder updated successfully!");
+            alert("Shared folder web link updated!");
         }
     } else {
-        alert("Native directory selection requires the Python app wrapper.");
+        if (window.pywebview) {
+            const folder = await window.pywebview.api.choose_directory();
+            if (folder) {
+                appSettings.sharedFolderRoot = folder;
+                appSettings.sharedFolderLink = ''; // Clear the web link if a local folder is chosen
+                saveSettings();
+                alert("Shared root folder updated successfully!");
+            }
+        } else {
+            alert("Native directory selection requires the Python app wrapper.");
+        }
     }
 });
 
@@ -3472,6 +3502,172 @@ if (helpAbout) {
         }
     });
 }
+
+// Shared Registration Modal opening logic
+async function openRegistrationModal() {
+    const modal = document.getElementById('registration-modal');
+    const authKeyInput = document.getElementById('reg-auth-key');
+    const licenseKeyInput = document.getElementById('reg-license-key');
+    const statusBox = document.getElementById('reg-status-box');
+    const statusVal = document.getElementById('reg-status-val');
+    
+    const unregisteredView = document.getElementById('registration-unregistered-view');
+    const registeredView = document.getElementById('registration-registered-view');
+    const licensedName = document.getElementById('licensed-name');
+    const licensedEmail = document.getElementById('licensed-email');
+    const licensedDate = document.getElementById('licensed-date');
+    
+    if (!window.pywebview) {
+        alert("Registration is only available when running in the compiled application.");
+        return;
+    }
+
+    try {
+        const info = await window.pywebview.api.get_registration_info();
+        if (info) {
+            if (info.is_registered) {
+                // Show registered view
+                if (unregisteredView) unregisteredView.style.display = 'none';
+                if (registeredView) registeredView.style.display = 'block';
+                
+                if (licensedName) licensedName.textContent = info.reg_name || 'N/A';
+                if (licensedEmail) licensedEmail.textContent = info.reg_email || 'N/A';
+                if (licensedDate) licensedDate.textContent = info.date_registered || 'N/A';
+                
+                document.body.classList.remove('unlicensed');
+            } else {
+                // Show unregistered view
+                if (unregisteredView) unregisteredView.style.display = 'block';
+                if (registeredView) registeredView.style.display = 'none';
+                
+                if (authKeyInput) authKeyInput.value = info.auth_key || '';
+                if (licenseKeyInput) licenseKeyInput.value = info.registration_key || '';
+                
+                if (statusVal && statusBox) {
+                    statusVal.textContent = "Unlicensed (Trial Mode)";
+                    statusVal.style.color = "#f87171"; // soft red
+                    statusBox.style.borderColor = "#991b1b"; // dark red
+                    statusBox.style.backgroundColor = "#7f1d1d";
+                }
+                document.body.classList.add('unlicensed');
+            }
+        }
+    } catch (err) {
+        console.error("Failed to fetch registration info", err);
+    }
+
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+// Registration Modal click handler
+const helpRegistration = document.getElementById('help-registration');
+if (helpRegistration) {
+    helpRegistration.addEventListener('click', openRegistrationModal);
+}
+
+const btnCloseRegistration = document.getElementById('btn-close-registration');
+if (btnCloseRegistration) {
+    btnCloseRegistration.addEventListener('click', () => {
+        const modal = document.getElementById('registration-modal');
+        if (modal) modal.style.display = 'none';
+    });
+}
+
+const btnCloseRegistrationRegistered = document.getElementById('btn-close-registration-registered');
+if (btnCloseRegistrationRegistered) {
+    btnCloseRegistrationRegistered.addEventListener('click', () => {
+        const modal = document.getElementById('registration-modal');
+        if (modal) modal.style.display = 'none';
+    });
+}
+
+const btnCopyAuthKey = document.getElementById('btn-copy-auth-key');
+if (btnCopyAuthKey) {
+    btnCopyAuthKey.addEventListener('click', () => {
+        const authKeyInput = document.getElementById('reg-auth-key');
+        if (authKeyInput && authKeyInput.value) {
+            navigator.clipboard.writeText(authKeyInput.value).then(() => {
+                alert("Auth Key copied to clipboard!");
+            }).catch(err => {
+                // Fallback copying method
+                authKeyInput.select();
+                document.execCommand('copy');
+                alert("Auth Key copied to clipboard!");
+            });
+        }
+    });
+}
+
+const btnActivateLicense = document.getElementById('btn-activate-license');
+if (btnActivateLicense) {
+    btnActivateLicense.addEventListener('click', async () => {
+        const licenseKeyInput = document.getElementById('reg-license-key');
+        if (!licenseKeyInput || !licenseKeyInput.value.trim()) {
+            alert("Please enter a registration key.");
+            return;
+        }
+
+        if (!window.pywebview) return;
+
+        try {
+            const result = await window.pywebview.api.activate_registration(licenseKeyInput.value.trim());
+            if (result && result.success) {
+                alert(result.message);
+                const modal = document.getElementById('registration-modal');
+                if (modal) modal.style.display = 'none';
+                
+                // Refresh registration status instantly to unlock the UI
+                await checkRegistrationStartup();
+
+                // Open the Getting Started manual one time on first registration
+                if (!localStorage.getItem('xenoscript_manual_shown')) {
+                    localStorage.setItem('xenoscript_manual_shown', 'true');
+                    if (window.pywebview) {
+                        const success = await window.pywebview.api.open_writers_guide();
+                        if (!success) window.open('writers_guide.html', '_blank');
+                    } else {
+                        window.open('writers_guide.html', '_blank');
+                    }
+                }
+            } else {
+                alert(result ? result.error : "Failed to activate license.");
+            }
+        } catch (err) {
+            alert("An error occurred during activation: " + err);
+        }
+    });
+}
+
+// Unlicensed Lock Screen Overlay button handler
+const btnUnlicensedActivate = document.getElementById('btn-unlicensed-activate');
+if (btnUnlicensedActivate) {
+    btnUnlicensedActivate.addEventListener('click', openRegistrationModal);
+}
+
+// Check registration status on startup when the backend API is ready
+async function checkRegistrationStartup() {
+    if (!window.pywebview) {
+        // If not in pywebview (e.g. testing in a regular web browser), unlock the app
+        document.body.classList.remove('unlicensed');
+        return;
+    }
+    try {
+        const info = await window.pywebview.api.get_registration_info();
+        if (info && info.is_registered) {
+            document.body.classList.remove('unlicensed');
+        } else {
+            document.body.classList.add('unlicensed');
+        }
+    } catch (err) {
+        console.error("Error checking registration on startup:", err);
+        document.body.classList.add('unlicensed');
+    }
+}
+
+// Listen for the pywebview ready event to run the registration check
+window.addEventListener('pywebviewready', checkRegistrationStartup);
 
 if (btnCloseCorrectionLogs) {
     btnCloseCorrectionLogs.addEventListener('click', () => correctionLogsModal.style.display = 'none');
@@ -4802,9 +4998,34 @@ if (navProjectBtn && navScenesBtn && navNotesBtn) {
 
 const localNotesArea = document.getElementById('local-notes-area');
 if (localNotesArea) {
-    localNotesArea.value = localStorage.getItem('reelscript_local_notes') || '';
+    const loadNotes = () => {
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.load_notes) {
+            window.pywebview.api.load_notes().then(content => {
+                localNotesArea.value = content || localStorage.getItem('xenoscript_local_notes') || '';
+            }).catch(err => {
+                localNotesArea.value = localStorage.getItem('xenoscript_local_notes') || '';
+            });
+        } else {
+            localNotesArea.value = localStorage.getItem('xenoscript_local_notes') || '';
+        }
+    };
+
+    if (window.pywebview) {
+        loadNotes();
+    } else {
+        window.addEventListener('pywebviewready', loadNotes);
+    }
+
+    let noteSaveTimeout = null;
     localNotesArea.addEventListener('input', () => {
-        localStorage.setItem('reelscript_local_notes', localNotesArea.value);
+        clearTimeout(noteSaveTimeout);
+        noteSaveTimeout = setTimeout(() => {
+            if (window.pywebview && window.pywebview.api && window.pywebview.api.save_notes) {
+                window.pywebview.api.save_notes(localNotesArea.value);
+            } else {
+                localStorage.setItem('xenoscript_local_notes', localNotesArea.value);
+            }
+        }, 500);
     });
 }
 

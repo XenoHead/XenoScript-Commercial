@@ -223,3 +223,37 @@ settings.json
 
 Backups/
 
+.venvxr/
+build/
+dist/
+
+# XenoScript - Project Specific
+license.dat
+settings.json
+Characters.txt
+format_tools_log.json
+*log*.json
+*.log.json
+test*.py
+
+# Node / JS tooling
+node_modules/
+package-lock.json
+
+# Cloudflare / Wrangler
+.wrangler/
+.dev.vars
+
+# PyInstaller spec files (auto-generated, kept separate above but be explicit)
+*.spec
+
+# Dev build artifacts
+DevXenoScript.exe
+screenshot.png
+1screenshot.png
+
+.venvxs/
+.venvxr/
+.venv/
+.venv
+

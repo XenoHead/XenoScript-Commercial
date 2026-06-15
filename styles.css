@@ -573,7 +573,8 @@ body.show-page-numbers .page-break::after {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 10000;
+    pointer-events: auto !important;
 }
 .modal-content {
     background-color: var(--topbar-bg);
@@ -798,4 +799,85 @@ body.show-line-numbers .script-page p::before {
 }
 #btn-update-now {
     animation: pulse-amber 2s infinite;
+}
+
+/* Unlicensed Lockout Styles */
+body.unlicensed .top-menubar .menu-item:not(#help-menu) {
+    pointer-events: none;
+    opacity: 0.3;
+}
+body.unlicensed #help-menu .dropdown-content .dropdown-item:not(#help-registration) {
+    pointer-events: none;
+    opacity: 0.3;
+}
+body.unlicensed .format-toolbar, 
+body.unlicensed .mini-toolbar, 
+body.unlicensed .status-bar,
+body.unlicensed .main-container {
+    pointer-events: none;
+    opacity: 0.3;
+}
+.unlicensed-overlay {
+    display: none;
+    position: absolute;
+    top: 35px; /* height of top-menubar */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 15, 23, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 9990;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    color: #f8fafc;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    text-align: center;
+    padding: 30px;
+    pointer-events: auto !important; /* Allow clicking on elements inside the overlay */
+}
+body.unlicensed .unlicensed-overlay {
+    display: flex;
+}
+.unlicensed-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 480px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+    pointer-events: auto !important;
+}
+.unlicensed-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+.unlicensed-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 12px;
+}
+.unlicensed-desc {
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+.unlicensed-btn {
+    background-color: #1b8adb;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(27, 138, 219, 0.4);
+    pointer-events: auto !important;
+}
+.unlicensed-btn:hover {
+    background-color: #1a74b8;
 }

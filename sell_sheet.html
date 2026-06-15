@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XenoScript - The Professional Screenwriting Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(25, 25, 35, 0.6);
+            --bg-card-hover: rgba(35, 35, 50, 0.8);
+            --accent-primary: #5c6fff;
+            --accent-secondary: #ff3366;
+            --text-main: #f0f0f5;
+            --text-muted: #a0a0b0;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --shadow-glow: 0 0 30px rgba(92, 111, 255, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(92, 111, 255, 0.04) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(255, 51, 102, 0.04) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 80px 20px 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeUp 0.8s ease-out;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 30px;
+            animation: fadeUp 0.8s ease-out 0.2s both;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #3a4bdf 100%);
+            border-radius: 30px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(92, 111, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeUp 0.8s ease-out 0.4s both;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(92, 111, 255, 0.4);
+        }
+
+        /* Tabs Navigation */
+        .tabs-container {
+            margin-top: 40px;
+            animation: fadeUp 0.8s ease-out 0.6s both;
+        }
+
+        .tabs-nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            padding: 12px 24px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn:hover {
+            background: var(--bg-card-hover);
+            color: white;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #3a4bdf 100%);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Styling */
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-header h2 {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-glow);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .feature-image {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .feature-image {
+            transform: scale(1.02);
+        }
+
+        .feature-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Alternating Layout */
+        .showcase-row {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+            margin-bottom: 80px;
+        }
+
+        .showcase-row:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .showcase-text {
+            flex: 1;
+        }
+
+        .showcase-text h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #fff, #b0b0d0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .showcase-text p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        .showcase-text ul {
+            list-style: none;
+            color: var(--text-muted);
+        }
+        
+        .showcase-text ul li {
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .showcase-text ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+
+        .showcase-image {
+            flex: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4), var(--shadow-glow);
+            border: 1px solid var(--border-glass);
+        }
+        
+        .showcase-image img {
+            width: 100%;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+        
+        .showcase-image:hover img {
+            transform: scale(1.03);
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 900px) {
+            .showcase-row, .showcase-row:nth-child(even) {
+                flex-direction: column;
+                gap: 30px;
+            }
+            .hero h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hero Section -->
+    <header class="hero container">
+        <h1>Write Your Next Masterpiece</h1>
+        <p>XenoScript is the ultimate distraction-free, professional screenwriting environment designed for modern storytellers.</p>
+        <a href="#" class="btn">Get XenoScript Today</a>
+        
+        <div style="margin-top: 50px; animation: fadeUp 0.8s ease-out 0.5s both;">
+            <a href="screenshots/main.jpg" target="_blank" style="display: inline-block; transition: transform 0.3s ease; cursor: zoom-in;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <img src="screenshots/main.jpg" alt="XenoScript Interface" style="max-width: 500px; width: 100%; border-radius: 12px; border: 1px solid var(--border-glass); box-shadow: 0 15px 40px rgba(0,0,0,0.5), var(--shadow-glow);">
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 15px;">Click to view full interface</p>
+            </a>
+        </div>
+    </header>
+
+    <div class="container tabs-container">
+        <!-- Tabs Navigation -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" data-tab="tab-core">Core Experience</button>
+            <button class="tab-btn" data-tab="tab-collab">Collaboration</button>
+            <button class="tab-btn" data-tab="tab-org">Workflow</button>
+            <button class="tab-btn" data-tab="tab-custom">Customization</button>
+            <button class="tab-btn" data-tab="tab-peace">Peace of Mind</button>
+            <button class="tab-btn" data-tab="tab-support">Metrics & Support</button>
+            <button class="tab-btn" data-tab="tab-ai">AI Assistant</button>
+        </div>
+
+        <!-- Tab 1: Core Experience -->
+        <div class="tab-content active" id="tab-core">
+            <div class="section-header">
+                <h2>The Core Experience</h2>
+                <p>Everything you need to format your screenplay to industry standards, without the steep learning curve.</p>
+            </div>
+            
+            <div class="showcase-row">
+                <div class="showcase-text">
+                    <h3>The Main Editor</h3>
+                    <p>Experience a distraction-free, clean writing environment where you can focus entirely on your story.</p>
+                </div>
+                <div class="showcase-image">
+                    <img src="screenshots/script.JPG" alt="XenoScript Main Interface">
+                </div>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-text">
+                    <h3>Intuitive Formatting</h3>
+                    <p>Say goodbye to struggling with margins. XenoScript handles industry-standard formatting automatically.</p>
+                    <ul>
+                        <li>Smart autocomplete for Characters and Scene Headings.</li>
+                        <li>Instant toggling between Action, Character, Dialogue, and Parentheticals.</li>
+                        <li>Clean typography designed for long writing sessions.</li>
+                    </ul>
+                </div>
+                <div class="showcase-image">
+                    <img src="screenshots/format.JPG" alt="Formatting Tools">
+                </div>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-text">
+                    <h3>Quick Access Toolbar</h3>
+                    <p>Keep your most vital tools just a click away without cluttering your writing space.</p>
+                </div>
+                <div class="showcase-image">
+                    <img src="screenshots/topbuttons.JPG" alt="Top Buttons Toolbar">
+                </div>
+            </div>
+            
+            <div class="showcase-row">
+                <div class="showcase-text">
+                    <h3>Rich Text Editing</h3>
+                    <p>Highlight important directions, emphasize dialogue, and keep your script expressive with rich text editing tools.</p>
+                </div>
+                <div class="showcase-image">
+                    <img src="screenshots/tools-text.JPG" alt="Text Editing Tools">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Collaboration -->
+        <div class="tab-content" id="tab-collab">
+            <div class="section-header">
+                <h2>Built for Collaboration</h2>
+                <p>Writing is rarely a solo journey. XenoScript makes working in writers' rooms and with co-authors seamless.</p>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <img src="screenshots/Author Profile.JPG" alt="Author Profile" class="feature-image">
+                    <h3>Author Profiles</h3>
+                    <p>Claim your identity. Set your name and pick a custom color for your revision asterisks. Never wonder who made a specific change again.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <img src="screenshots/revisions.JPG" alt="Revision Mode" class="feature-image">
+                    <h3>Revision Tracking</h3>
+                    <p>Lock pages and track changes professionally. Instantly generate color-coded asterisks to highlight new additions to your script.</p>
+                </div>
+
+                <div class="feature-card">
+                    <img src="screenshots/share.JPG" alt="Share Tools" class="feature-image">
+                    <h3>Seamless Sharing</h3>
+                    <p>Export, share, and collaborate across multiple devices. XenoScript keeps your team on the same page.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Organization -->
+        <div class="tab-content" id="tab-org">
+            <div class="section-header">
+                <h2>Organization & Workflow</h2>
+                <p>Keep your complex narratives organized from fade in to fade out.</p>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-text">
+                    <h3>Scene Navigator</h3>
+                    <p>Never get lost in a 120-page script again. The Scene Navigator builds an interactive outline of your story as you write.</p>
+                    <ul>
+                        <li>Jump instantly to any scene.</li>
+                        <li>Get a bird's-eye view of your story structure.</li>
+                        <li>Track scene length and flow at a glance.</li>
+                    </ul>
+                </div>
+                <div class="showcase-image">
+                    <img src="screenshots/scenes.JPG" alt="Scene Navigator">
+                </div>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <img src="screenshots/tools-character.JPG" alt="Character Tools" class="feature-image">
+                    <h3>Character Management</h3>
+                    <p>Keep track of your cast easily. Ensure consistent naming and manage your character profiles.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <img src="screenshots/tools-filter.JPG" alt="Advanced Filters" class="feature-image">
+                    <h3>Advanced Filtering</h3>
+                    <p>Need to review just the dialogue for your lead actor? Filter your entire script to isolate specific elements instantly.</p>
+                </div>
+
+                <div class="feature-card">
+                    <img src="screenshots/mynotes.JPG" alt="My Notes" class="feature-image">
+                    <h3>Built-in Scratchpad</h3>
+                    <p>Keep a dedicated space for your brilliant ideas, plot points, and character arcs without leaving the app.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Customization -->
+        <div class="tab-content" id="tab-custom">
+            <div class="section-header">
+                <h2>Your Workspace, Your Rules</h2>
+                <p>Customize the environment to match your creative process.</p>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-text">
+                    <h3>Complete Customization</h3>
+                    <p>Adjust the UI to reduce eye strain and fit your aesthetic. Change fonts, colors, and the overall look of the editor.</p>
+                </div>
+                <div class="showcase-image">
+                    <img src="screenshots/customize.JPG" alt="Customize Workspace">
+                </div>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-text">
+                    <h3>Flexible View Options</h3>
+                    <p>Whether you need a massive font for readability or a zoomed-out view for structuring, XenoScript adapts to your screen.</p>
+                </div>
+                <div class="showcase-image">
+                    <img src="screenshots/view.JPG" alt="View Options">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 5: Peace of Mind -->
+        <div class="tab-content" id="tab-peace">
+            <div class="section-header">
+                <h2>Peace of Mind</h2>
+                <p>Your writing is your most valuable asset. We protect it.</p>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <img src="screenshots/manage_backups.JPG" alt="Automated Backups" class="feature-image">
+                    <h3>Automated Backups</h3>
+                    <p>XenoScript automatically saves snapshots of your work. Easily roll back to previous versions if you change your mind about a scene.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <img src="screenshots/file.JPG" alt="File Management" class="feature-image">
+                    <h3>Professional Export</h3>
+                    <p>Generate industry-standard PDFs instantly. Ready to print, ready to pitch, ready for production.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <img src="screenshots/edit.JPG" alt="Standard Edit Tools" class="feature-image">
+                    <h3>Reliable Editing</h3>
+                    <p>Robust undo/redo histories and powerful find & replace tools ensure you're always in control of your text.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 6: Metrics & Support -->
+        <div class="tab-content" id="tab-support">
+            <div class="section-header">
+                <h2>Metrics & Support</h2>
+                <p>Analyze your progress and get help whenever you need it.</p>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-text">
+                    <h3>Detailed Reports</h3>
+                    <p>Analyze your screenplay's pacing and structure. Get detailed metrics on scene lengths, character dialogue percentages, and overall script health.</p>
+                </div>
+                <div class="showcase-image">
+                    <img src="screenshots/reports.JPG" alt="Script Reports">
+                </div>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-text">
+                    <h3>Built-in Help Manual</h3>
+                    <p>Never get stuck. Access comprehensive documentation directly within the app whenever you need a refresher.</p>
+                </div>
+                <div class="showcase-image">
+                    <img src="screenshots/Help.JPG" alt="Help Manual">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 7: AI Assistant -->
+        <div class="tab-content" id="tab-ai">
+            <div class="section-header">
+                <h2>Your Personal Story Editor</h2>
+                <p>XenoScript integrates with Google Gemini to offer an objective second pair of eyes on your work, strictly as a constructive critique partner.</p>
+            </div>
+
+            <div class="showcase-row">
+                <div class="showcase-text">
+                    <h3>An Editor, Not a Ghostwriter</h3>
+                    <p>We fiercely believe in protecting your creative voice. The AI in XenoScript is intentionally designed to <strong>never write your script for you</strong>.</p>
+                    <ul>
+                        <li><strong>No Auto-Complete:</strong> It will never hijack your story or write your scenes.</li>
+                        <li><strong>Constructive Critique:</strong> It will point out pacing issues, plot holes, or clunky dialogue.</li>
+                        <li><strong>Smart Suggestions:</strong> It acts like a professional script doctor, offering actionable feedback to help you elevate your own writing.</li>
+                    </ul>
+                </div>
+                <div class="showcase-image">
+                    <img src="ai_assistant.png" alt="AI Assistant">
+                </div>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card" style="grid-column: 1 / -1;">
+                    <h3>Bring Your Own Key (BYOK)</h3>
+                    <p>To ensure absolute privacy and give you full control over your usage, XenoScript uses a Bring Your Own Key model. Your script is never used to train our models. Simply plug in your own Google Gemini API key to securely activate your private story editor.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer style="text-align: center; padding: 40px 20px; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-muted); margin-top: 60px;">
+        <div class="container">
+            <p>&copy; 2026 Xenohead. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active from all buttons and contents
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+
+                    // Add active to clicked button and target content
+                    btn.classList.add('active');
+                    const targetId = btn.getAttribute('data-tab');
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

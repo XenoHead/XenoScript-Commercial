@@ -1,10 +1,10 @@
-# 🎬 ReelScript
+# 🎬 XenoScript
 
-**ReelScript** is a professional screenplay writing application built for Windows. It combines industry-standard formatting with real-time collaboration, AI-assisted writing, and an aggressive backup system — everything a screenwriter needs in one place.
+**XenoScript** is a professional screenplay writing application built for Windows. It combines industry-standard formatting with real-time collaboration, AI-assisted writing, and an aggressive backup system — everything a screenwriter needs in one place.
 
-> **Current Version:** 4.7.8 &nbsp;|&nbsp; **Last Updated:** June 4, 2026
+> **Current Version:** 8.4.1 &nbsp;|&nbsp; **Last Updated:** June 15, 2026
 
-![ReelScript Screenshot](./screenshot.png)
+![XenoScript Screenshot](./screenshot.png)
 
 ---
 
@@ -25,7 +25,7 @@
 - Hover over any asterisk to see who made the change
 - **Revision Notes** — right-click an asterisk to leave an explanation for your collaborator
 - One-click **Approve** to accept changes and clean up the script
-- Shareable `.rsp` (ReelScript Project) file format for easy back-and-forth
+- Shareable `.xsp` (XenoScript Project) file format for easy back-and-forth
 
 ### 🤖 AI Assistant (Powered by Google Gemini - BYOK)
 | Feature | How to Use |
@@ -40,7 +40,7 @@
 
 ### 💾 Backups & Auto-Save
 - Auto-saves every **1 second** of typing pause + configurable timed interval (default: 5 min)
-- **Local backup folder** (default: `Documents/ReelScript`)
+- **Local backup folder** (default: `Documents/XenoScript`)
 - **Cloud backup folder** — point it at Google Drive or Dropbox for off-site copies
 - Rolling backup limit (default: 5) automatically prunes the oldest files
 - **Manual Snapshots** — name a save state before a major rewrite and restore it anytime
@@ -58,7 +58,7 @@
 - **Export to Final Draft (.fdx)** — native format for producers and agents
 
 ### 🔄 Automatic Updates
-- Checks [GitHub](https://github.com/XENOHEAD/reelscript/releases) for new versions silently on every launch
+- Checks [GitHub](https://github.com/XenoHead/XenoScript-Commercial/releases) for new versions silently on every launch
 - A **⚡ UPDATE NOW** banner appears in the title bar when an update is available
 - **Customize → Check for Updates...** to check manually at any time
 - No telemetry — the only network call is a single read of `version.json` from GitHub
@@ -99,10 +99,10 @@
 
 ### For End Users
 
-1. Download **`ReelScript_Setup.exe`** from [GitHub Releases](https://github.com/XENOHEAD/reelscript/releases).
+1. Download **`XenoScript_Setup.exe`** from [GitHub Releases](https://github.com/XenoHead/XenoScript-Commercial/releases).
 2. Double-click it and follow the install wizard.
-3. A **ReelScript** shortcut will appear on your Desktop and in the Start Menu.
-4. `.rsp` project files are automatically associated with the app.
+3. A **XenoScript** shortcut will appear on your Desktop and in the Start Menu.
+4. `.xsp` project files are automatically associated with the app.
 
 The installer handles everything — no command line, no admin batch files.
 
@@ -114,14 +114,14 @@ The installer handles everything — no command line, no admin batch files.
    build.bat
    ```
 3. This produces:
-   - `dist\ReelScript.exe` — standalone executable
-   - `dist\ReelScript_Setup.exe` — full Windows installer
+   - `dist\XenoScript.exe` — standalone executable
+   - `dist\XenoScript_Setup.exe` — full Windows installer
 
 ### First-Time Setup
 
 Before writing, set your author profile so your revisions are properly attributed:
 
-1. Open ReelScript.
+1. Open XenoScript.
 2. Go to **Customize → Author Profile & Revision Color**.
 3. Enter your name and pick a color.
 4. Click **Save Profile**.
@@ -144,26 +144,18 @@ Before writing, set your author profile so your revisions are properly attribute
 ## 🗂️ Project Structure
 
 ```
-reelscript/
+xenoscript/
 ├── index.html              # Main editor UI
 ├── script.js               # All editor logic
 ├── styles.css              # Styling
-├── reelscript.pyw          # Python desktop shell (pywebview)
+├── xenoscript.pyw          # Python desktop shell (pywebview)
 ├── developer_hub.pyw       # Developer tools
 ├── installer.iss           # Inno Setup installer script
 ├── build.bat               # One-click build + package script
 ├── requirements.txt        # Python dependencies
 ├── version.json            # Version & changelog
-├── ReelScript_Manual.txt   # Plain text user manual
-├── manual.html             # Fancy HTML user manual
 └── FEATURE FILM SCREENPLAY FORMAT.docx  # Format reference
 ```
-
----
-
-## 📖 Documentation
-
-For full usage details, see the [Fancy HTML Manual](./manual.html) or the [Plain Text Manual](./ReelScript_Manual.txt).
 
 ---
 

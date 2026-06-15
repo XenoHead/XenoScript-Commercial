@@ -18,7 +18,7 @@
             setTimeout(() => clearInterval(safeguardInterval), 5000);
         } catch (e) {}
     </script>
-    <title>ReelScript - Pro Screenplay Editor</title>
+    <title>XenoScript - Pro Screenplay Editor</title>
     <link rel="icon" href="movie-icon.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -29,12 +29,23 @@
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
-<body>
+<body class="unlicensed">
+
+    <div class="unlicensed-overlay">
+        <div class="unlicensed-card">
+            <div class="unlicensed-icon">🔒</div>
+            <div class="unlicensed-title">Commercial Version Registration</div>
+            <div class="unlicensed-desc">
+                XenoScript is currently unlicensed. To unlock the full commercial version, please enter your registration key.
+            </div>
+            <button class="unlicensed-btn" id="btn-unlicensed-activate">Enter Registration Key</button>
+        </div>
+    </div>
 
     <div class="top-menubar">
         <div style="font-weight: bold; color: white; margin-right: 20px; display: flex; align-items: center; gap: 8px;">
-            <img src="movie-icon.png" alt="ReelScript Logo" style="height: 18px; width: 18px; object-fit: contain; border-radius: 4px;">
-            <span id="app-title-display">ReelScript 2.5</span>
+            <img src="movie-icon.png" alt="XenoScript Logo" style="height: 18px; width: 18px; object-fit: contain; border-radius: 4px;">
+            <span id="app-title-display">XenoScript 2.5</span>
             <button id="btn-update-now" style="display: none; background: #f59e0b; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; margin-left: 12px; box-shadow: 0 0 10px rgba(245,158,11,0.5);">⚡ UPDATE NOW</button>
         </div>
         <div class="menu-item dropdown" id="file-menu">File
@@ -49,7 +60,6 @@
                 <div class="dropdown-divider"></div>
                 <div class="dropdown-item" id="file-menu-save"><span>Save Project</span><span class="hotkey-text" data-hotkey-display="save-project">Ctrl-S</span></div>
                 <div class="dropdown-item" id="file-menu-save-as"><span>Save Project As...</span></div>
-                <div class="dropdown-item" id="file-menu-backups"><span>Manage Backups & Auto-Save</span><span class="hotkey-text" data-hotkey-display="manage-backups">Ctrl-Shift-S</span></div>
                 <div class="dropdown-divider"></div>
                 <div class="dropdown-item" id="file-menu-rename"><span>Rename Project...</span></div>
                 <div class="dropdown-item" id="file-menu-duplicate"><span>Duplicate Project...</span></div>
@@ -183,12 +193,15 @@
         </div>
         <div class="menu-item dropdown" id="help-menu">Help
             <div class="dropdown-content">
-                <div class="dropdown-item" id="help-user-manual"><span>📖 User Manual</span></div>
+                <div class="dropdown-item" id="help-user-manual"><span>🚀 Get Started...</span></div>
+                <div class="dropdown-divider"></div>
                 <div class="dropdown-item" id="help-writers-guide"><span>📖 Writer's Guide</span></div>
                 <div class="dropdown-item" id="help-correction-logs"><span>📝 Correction Logs</span></div>
                 <div class="dropdown-divider"></div>
                 <div class="dropdown-item" id="menu-check-github-updates"><span>🔄 Check for Updates...</span></div>
-                <div class="menu-separator"></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="help-registration"><span>🔑 Registration...</span></div>
+                <div class="dropdown-divider"></div>
                 <div class="dropdown-item" id="help-about"><span>ℹ️ About</span></div>
             </div>
         </div>
@@ -336,11 +349,12 @@
             <span id="syncText">Local Backup Active</span>
         </div>
     </div>
+    </div></div> <!-- Close .editor-area and .main-container -->
 
     <!-- Backup Configuration Modal -->
     <div id="backup-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content" style="width: 550px;">
-            <h2>💽 Manage Backups & Auto-Save <span title="Backups are physical .rsp files automatically saved to your hard drive or cloud. They act as your safety net against computer crashes." style="cursor:help; font-size:14px; opacity:0.7;">❔</span></h2>
+            <h2>💽 Manage Backups & Auto-Save <span title="Backups are physical .xsp files automatically saved to your hard drive or cloud. They act as your safety net against computer crashes." style="cursor:help; font-size:14px; opacity:0.7;">❔</span></h2>
             <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; margin-top: 5px;">Automatically save hard copies of your project to your computer or cloud drive.</p>
             
             <div class="backup-option" style="margin-bottom: 15px;">
@@ -586,7 +600,7 @@
     <!-- Snapshots Modal -->
     <div id="snapshots-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content" style="width: 500px;">
-            <h2>📸 Manage Snapshots <span title="Snapshots are instant, manual save-states stored internally inside ReelScript. They act as your 'Undo' points for rapid experimentation within a single editing session." style="cursor:help; font-size:14px; opacity:0.7;">❔</span></h2>
+            <h2>📸 Manage Snapshots <span title="Snapshots are instant, manual save-states stored internally inside XenoScript. They act as your 'Undo' points for rapid experimentation within a single editing session." style="cursor:help; font-size:14px; opacity:0.7;">❔</span></h2>
             <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; margin-top: 5px;">Save the current state of your entire project to instantly roll back to later without messing with files.</p>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <input type="text" id="snapshot-name-input" placeholder="e.g., Sister's Edits V1" style="flex:1; background: #1a232c; border: 1px solid #36424e; color: white; padding: 6px 10px; border-radius: 4px; font-size: 12px; outline: none;">
@@ -624,13 +638,80 @@
     <div id="about-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content" style="width: 400px; text-align: center;">
             <img src="xenohead_logo.png" alt="XenoHead Logo" style="width: 120px; height: 120px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
-            <h2 style="margin: 0; font-family: 'Outfit', sans-serif; color: #f8fafc;">ReelScript</h2>
-            <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 5px;">Version <span id="about-version">4.7.8</span></p>
+            <h2 style="margin: 0; font-family: 'Outfit', sans-serif; color: #f8fafc;">XenoScript</h2>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 5px;">Version <span id="about-version">8.4.1</span></p>
             <div style="margin: 20px 0; padding: 15px; background: #131a2c; border-radius: 8px; border: 1px solid #2d3748;">
                 <p style="margin: 0; color: #e2e8f0; font-weight: bold;">Built by XenoHead</p>
                 <a href="#" onclick="window.pywebview ? window.pywebview.api.open_url('https://www.xenohead.com') : window.open('https://www.xenohead.com','_blank')" style="color: #1b8adb; text-decoration: none; font-size: 0.9rem; display: block; margin-top: 5px;">www.xenohead.com</a>
             </div>
             <button id="btn-close-about" class="modal-btn" style="background-color: #4a5568; width: 100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="registration-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 420px; background: #1a222c; border: 1px solid #36424e; border-radius: 12px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.6);">
+            <h2 style="margin: 0 0 10px 0; font-family: 'Outfit', sans-serif; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+                🔑 Registration
+            </h2>
+            
+            <!-- Unregistered View -->
+            <div id="registration-unregistered-view">
+                <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 5px; line-height: 1.4;">
+                    Please register XenoScript to activate the full commercial version.
+                </p>
+                
+                <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <label style="color: #94a3b8; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px;">
+                            Auth Key (Hardware ID):
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="reg-auth-key" readonly style="flex: 1; padding: 10px; background: #131a2c; border: 1px solid #2d3748; color: #e2e8f0; font-family: 'Consolas', monospace; font-size: 0.95rem; border-radius: 6px;" value="XS-XXXX-XXXX-XXXX">
+                            <button id="btn-copy-auth-key" class="modal-btn" style="background: #2d3748; border: 1px solid #4a5568; color: #f1f5f9; padding: 0 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; height: 38px; display: flex; align-items: center; justify-content: center; margin: 0;">Copy</button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label style="color: #94a3b8; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px;">
+                            Registration Key:
+                        </label>
+                        <input type="text" id="reg-license-key" placeholder="XXXX-XXXX-XXXX" style="width: 100%; box-sizing: border-box; padding: 10px; background: #131a2c; border: 1px solid #2d3748; color: #e2e8f0; font-family: 'Consolas', monospace; font-size: 1.05rem; border-radius: 6px; text-transform: uppercase;">
+                    </div>
+                    
+                    <div style="padding: 10px 15px; border-radius: 6px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; background: #2d3748; border: 1px solid #4a5568;" id="reg-status-box">
+                        <span style="color: #94a3b8;">Status:</span>
+                        <span id="reg-status-val" style="font-weight: bold; color: #e2e8f0;">Unlicensed</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button id="btn-activate-license" class="modal-btn" style="background-color: #1b8adb; flex: 1;">Activate</button>
+                    <button id="btn-close-registration" class="modal-btn" style="background-color: #4a5568; flex: 1;">Close</button>
+                </div>
+            </div>
+
+            <!-- Registered View -->
+            <div id="registration-registered-view" style="display: none;">
+                <p style="color: #10b981; font-size: 0.95rem; font-weight: bold; margin-top: 5px; margin-bottom: 20px; display: flex; align-items: center; gap: 6px;">
+                    ✅ Product Registered & Licensed
+                </p>
+                <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 15px; background: #131a2c; padding: 15px; border: 1px solid #2d3748; border-radius: 8px;">
+                    <div>
+                        <span style="color: #94a3b8; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 3px;">Customer Name:</span>
+                        <span id="licensed-name" style="font-size: 1rem; color: #e2e8f0; font-weight: bold;">John Doe</span>
+                    </div>
+                    <div>
+                        <span style="color: #94a3b8; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 3px;">Email Address:</span>
+                        <span id="licensed-email" style="font-size: 1rem; color: #e2e8f0; font-weight: bold;">john@example.com</span>
+                    </div>
+                    <div>
+                        <span style="color: #94a3b8; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 3px;">Purchase Date:</span>
+                        <span id="licensed-date" style="font-size: 1rem; color: #e2e8f0; font-weight: bold;">2026-06-15</span>
+                    </div>
+                </div>
+                <button id="btn-close-registration-registered" class="modal-btn" style="background-color: #4a5568; width: 100%; margin-top: 10px;">Close</button>
+            </div>
         </div>
     </div>
 
@@ -874,7 +955,7 @@
         <div class="modal-content" style="width: 480px; border-radius: 12px; border: 1px solid #36424e; background: var(--topbar-bg); box-shadow: 0 20px 40px rgba(0,0,0,0.6); display: flex; flex-direction: column; max-height: 80vh;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #36424e; padding-bottom: 10px;">
                 <span style="font-size: 24px;">🚀</span>
-                <h2 style="margin: 0; border: none; padding: 0; font-size: 18px; font-weight: bold; color: white;">What's New in ReelScript <span id="changelog-version-title">2.5</span></h2>
+                <h2 style="margin: 0; border: none; padding: 0; font-size: 18px; font-weight: bold; color: white;">What's New in XenoScript <span id="changelog-version-title">2.5</span></h2>
             </div>
             <div id="changelog-content" style="flex: 1; overflow-y: auto; padding-right: 5px; font-size: 13px; line-height: 1.6; color: #d1d5db; margin-bottom: 20px;">
                 <!-- Changelog bullets dynamically loaded here -->

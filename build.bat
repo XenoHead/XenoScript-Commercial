@@ -1,6 +1,6 @@
 @echo off
 echo ==========================================
-echo  ReelScript - Full Build + Package
+echo  XenoScript - Full Build + Package
 echo ==========================================
 echo.
 
@@ -16,14 +16,14 @@ echo.
 echo [1.5/3] Cleaning up old build artifacts...
 if exist "build" rmdir /s /q "build"
 if exist "dist" rmdir /s /q "dist"
-if exist "ReelScript.spec" del /q "ReelScript.spec"
+if exist "XenoScript.spec" del /q "XenoScript.spec"
 
 echo.
 :: Step 2: Compile with PyInstaller
 echo [2/3] Building executable with PyInstaller...
 echo       This may take 2-4 minutes. Please wait...
 python -m PyInstaller --noconfirm --clean --onefile --windowed ^
-  --name "ReelScript" ^
+  --name "XenoScript" ^
   --icon "movie-icon.ico" ^
   --add-data "movie-icon.ico;." ^
   --add-data "movie-icon.png;." ^
@@ -32,7 +32,6 @@ python -m PyInstaller --noconfirm --clean --onefile --windowed ^
   --add-data "script.js;." ^
   --add-data "version.json;." ^
   --add-data "editor.PY;." ^
-  --add-data "manual.html;." ^
   --add-data "writers_guide.html;." ^
   --add-data "writer_guide_hero.png;." ^
   --add-data "writer_guide_blueprint.png;." ^
@@ -50,10 +49,22 @@ python -m PyInstaller --noconfirm --clean --onefile --windowed ^
   --hidden-import requests ^
   --hidden-import tkinter ^
   --hidden-import tkinter.filedialog ^
-  reelscript.pyw
+  xenoscript.pyw
 
 if errorlevel 1 (
     echo ERROR: PyInstaller build failed.
+    exit /b 1
+)
+
+echo.
+echo [2.5/3] Building updater executable with PyInstaller...
+python -m PyInstaller --noconfirm --clean --onefile --windowed ^
+  --name "XenoScriptUpdater" ^
+  --icon "movie-icon.ico" ^
+  xenoscript_updater.py
+
+if errorlevel 1 (
+    echo ERROR: PyInstaller build for XenoScriptUpdater failed.
     exit /b 1
 )
 
@@ -75,9 +86,9 @@ if %ISCC%=="" (
     echo.
     echo WARNING: Inno Setup 6 not found. Skipping installer packaging.
     echo          Download it free from: https://jrsoftware.org/isdl.php
-    echo          Then re-run this script to produce ReelScript_Setup.exe
+    echo          Then re-run this script to produce XenoScript_Setup.exe
     echo.
-    echo [DONE] Executable only: dist\ReelScript.exe
+    echo [DONE] Executable only: dist\XenoScript.exe
     exit /b 0
 )
 
@@ -92,8 +103,8 @@ echo ==========================================
 echo  Build Complete!
 echo ==========================================
 echo.
-echo  Executable : dist\ReelScript.exe
-echo  Installer  : dist\ReelScript_Setup.exe
+echo  Executable : dist\XenoScript.exe
+echo  Installer  : dist\XenoScript_Setup.exe
 echo.
-echo  Upload ReelScript_Setup.exe to GitHub Releases.
+echo  Upload XenoScript_Setup.exe to GitHub Releases.
 echo ==========================================

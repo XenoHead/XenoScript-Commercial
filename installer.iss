@@ -1,22 +1,22 @@
 ; ============================================================
-;  ReelScript - Inno Setup Installer Script
-;  Produces: ReelScript_Setup.exe
+;  XenoScript - Inno Setup Installer Script
+;  Produces: XenoScript_Setup.exe
 ;
 ;  Requirements:
 ;    - Inno Setup 6.x (https://jrsoftware.org/isinfo.php)
-;    - Run build.bat first to produce dist\reelscript.exe
+;    - Run build.bat first to produce dist\xenoscript.exe
 ;
 ;  To compile:
 ;    Open this file in the Inno Setup Compiler and click Build,
 ;    or run: ISCC.exe installer.iss
 ; ============================================================
 
-#define AppName        "ReelScript"
-#define AppVersion     "4.7.8"
+#define AppName        "XenoScript"
+#define AppVersion     "8.4.1"
 #define AppPublisher   "XenoHead"
-#define AppURL         "https://github.com/XENOHEAD/reelscript"
+#define AppURL         "https://github.com/XenoHead/XenoScript-Commercial"
 #define AppCopyright   "Copyright (C) 2026 XenoHead"
-#define AppExeName     "ReelScript.exe"
+#define AppExeName     "XenoScript.exe"
 #define AppDescription "Professional Screenplay Editor"
 
 [Setup]
@@ -24,7 +24,7 @@
 AppId={{A3F1C2D4-7E8B-4F2A-9C1D-5B6E7F8A9B0C}
 AppName={#AppName}
 AppVersion={#AppVersion}
-AppMutex=ReelScriptMutex
+AppMutex=XenoScriptMutex
 AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
 AppCopyright={#AppCopyright}
@@ -39,7 +39,7 @@ DisableProgramGroupPage=yes
 
 ; Output
 OutputDir=dist
-OutputBaseFilename=ReelScript_Setup
+OutputBaseFilename=XenoScript_Setup
 SetupIconFile=movie-icon.ico
 WizardStyle=modern
 
@@ -73,7 +73,8 @@ Name: "startmenuicon";  Description: "Create a &Start Menu shortcut";           
 
 [Files]
 ; Main executable (built by PyInstaller via build.bat)
-Source: "dist\reelscript.exe"; DestDir: "{app}"; DestName: "{#AppExeName}"; Flags: ignoreversion
+Source: "dist\xenoscript.exe"; DestDir: "{app}"; DestName: "{#AppExeName}"; Flags: ignoreversion
+Source: "dist\XenoScriptUpdater.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 ; App icon (for file association thumbnails)
 Source: "movie-icon.ico";      DestDir: "{app}"; Flags: ignoreversion
@@ -83,8 +84,6 @@ Source: "movie-icon.png";      DestDir: "{app}"; Flags: ignoreversion
 Source: "version.json";        DestDir: "{app}"; Flags: ignoreversion
 
 ; Documentation
-Source: "ReelScript_Manual.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "manual.html";           DestDir: "{app}"; Flags: ignoreversion
 Source: "writers_guide.html";    DestDir: "{app}"; Flags: ignoreversion
 Source: "writer_guide_hero.png"; DestDir: "{app}"; Flags: ignoreversion
 Source: "writer_guide_blueprint.png"; DestDir: "{app}"; Flags: ignoreversion
@@ -95,11 +94,11 @@ Source: "backups_sync.png";      DestDir: "{app}"; Flags: ignoreversion
 Source: "xenohead_logo.png";     DestDir: "{app}"; Flags: ignoreversion
 
 ; Sample project (optional — ships with the installer)
-Source: "SampleProject.rsp"; DestDir: "{userdocs}\ReelScript\Samples"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "SampleProject.xsp"; DestDir: "{userdocs}\XenoScript\Samples"; Flags: ignoreversion skipifsourcedoesntexist
 
 [Dirs]
 ; Create the user's backup/settings folder on install
-Name: "{userdocs}\ReelScript"
+Name: "{userdocs}\XenoScript"
 
 [Icons]
 ; Start Menu
@@ -110,22 +109,22 @@ Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\movie-icon.ico"; Comment: "{#AppDescription}"; Tasks: desktopicon
 
 [Registry]
-; ── .rsp file association ──────────────────────────────────
-Root: HKLM; Subkey: "Software\Classes\.rsp";                     ValueType: string; ValueName: ""; ValueData: "ReelScriptProject"; Flags: uninsdeletevalue
-Root: HKLM; Subkey: "Software\Classes\.rsp";                     ValueType: string; ValueName: "Content Type"; ValueData: "application/x-reelscript"; Flags: uninsdeletevalue
-Root: HKLM; Subkey: "Software\Classes\ReelScriptProject";        ValueType: string; ValueName: ""; ValueData: "ReelScript Project"; Flags: uninsdeletekey
-Root: HKLM; Subkey: "Software\Classes\ReelScriptProject\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"
-Root: HKLM; Subkey: "Software\Classes\ReelScriptProject\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
+; ── .xsp file association ──────────────────────────────────
+Root: HKLM; Subkey: "Software\Classes\.xsp";                     ValueType: string; ValueName: ""; ValueData: "XenoScriptProject"; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\Classes\.xsp";                     ValueType: string; ValueName: "Content Type"; ValueData: "application/x-xenoscript"; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\Classes\XenoScriptProject";        ValueType: string; ValueName: ""; ValueData: "XenoScript Project"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "Software\Classes\XenoScriptProject\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"
+Root: HKLM; Subkey: "Software\Classes\XenoScriptProject\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
 
 ; ── .ksp legacy file association ───────────────────────────
-Root: HKLM; Subkey: "Software\Classes\.ksp";                     ValueType: string; ValueName: ""; ValueData: "ReelScriptProject"; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\Classes\.ksp";                     ValueType: string; ValueName: ""; ValueData: "XenoScriptProject"; Flags: uninsdeletevalue
 
 ; ── App registration (Add/Remove Programs extras) ──────────
 Root: HKLM; Subkey: "Software\{#AppPublisher}\{#AppName}"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Flags: uninsdeletekey
 Root: HKLM; Subkey: "Software\{#AppPublisher}\{#AppName}"; ValueType: string; ValueName: "Version";     ValueData: "{#AppVersion}"
 
 [Run]
-; Offer to launch ReelScript after install
+; Offer to launch XenoScript after install
 Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName} now"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
@@ -138,7 +137,7 @@ begin
   if CurStep = ssPostInstall then
   begin
     RegWriteStringValue(HKEY_LOCAL_MACHINE,
-      'Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.rsp',
+      'Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.xsp',
       'Application', '{app}\{#AppExeName}');
   end;
 end;
@@ -148,11 +147,11 @@ begin
   if CurUninstallStep = usPostUninstall then
   begin
     // Optionally prompt to keep user data
-    if MsgBox('Would you like to delete your ReelScript settings and backups?' + #13#10 +
-              '(' + ExpandConstant('{userdocs}\ReelScript') + ')',
+    if MsgBox('Would you like to delete your XenoScript settings and backups?' + #13#10 +
+              '(' + ExpandConstant('{userdocs}\XenoScript') + ')',
               mbConfirmation, MB_YESNO) = IDYES then
     begin
-      DelTree(ExpandConstant('{userdocs}\ReelScript'), True, True, True);
+      DelTree(ExpandConstant('{userdocs}\XenoScript'), True, True, True);
     end;
   end;
 end;

@@ -1,0 +1,8 @@
+name = "xenoscript-licensing"
+main = "licensing_worker.js"
+compatibility_date = "2026-06-15"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "xenohead_data"
+database_id = "00a8c155-5ef7-4db6-a7ac-efc34c20a049"
