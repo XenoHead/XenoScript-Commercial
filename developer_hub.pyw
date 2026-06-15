@@ -1225,13 +1225,6 @@ class DeveloperHubApp:
                 self.root.after(0, lambda: self.log("❌ Error: git add version.json failed!"))
                 self.root.after(0, lambda: messagebox.showerror("Push Failed", "git add version.json failed."))
                 return
-                
-            # Stage setup file
-            ret, out = self.run_git_cmd(["git", "add", rel_setup_path])
-            if ret != 0:
-                self.root.after(0, lambda: self.log(f"❌ Error: git add {rel_setup_path} failed!"))
-                self.root.after(0, lambda: messagebox.showerror("Push Failed", f"git add {rel_setup_path} failed."))
-                return
             
             # 3. Commit changes
             new_ver = self.ver_entry.get().strip()
