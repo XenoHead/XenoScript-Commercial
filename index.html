@@ -1,0 +1,909 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // Safeguard to prevent recursive property traversal of window.native by Windows Accessibility / UI Automation
+        try {
+            if ('native' in window) {
+                delete window.native;
+            }
+            const safeguardInterval = setInterval(() => {
+                try {
+                    if ('native' in window && window.native !== null) {
+                        delete window.native;
+                    }
+                } catch (e) {}
+            }, 50);
+            setTimeout(() => clearInterval(safeguardInterval), 5000);
+        } catch (e) {}
+    </script>
+    <title>XenoScript - Pro Screenplay Editor</title>
+    <link rel="icon" href="movie-icon.png" type="image/png">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Automatically adds standard screenplay vertical spacing above Scene Headings in the visual editor */
+        #editor p.scene-heading {
+            margin-top: 1.5em;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+</head>
+<body>
+
+    <div class="top-menubar">
+        <div style="font-weight: bold; color: white; margin-right: 20px; display: flex; align-items: center; gap: 8px;">
+            <img src="movie-icon.png" alt="XenoScript Logo" style="height: 18px; width: 18px; object-fit: contain; border-radius: 4px;">
+            <span id="app-title-display">XenoScript 2.5</span>
+            <button id="btn-update-now" style="display: none; background: #f59e0b; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; margin-left: 12px; box-shadow: 0 0 10px rgba(245,158,11,0.5);">⚡ UPDATE NOW</button>
+        </div>
+        <div class="menu-item dropdown" id="file-menu">File
+            <div class="dropdown-content">
+                <div class="dropdown-item" id="file-menu-new"><span>New Project</span></div>
+                <div class="dropdown-item" id="file-menu-open"><span>Open Project</span><span class="hotkey-text" data-hotkey-display="open-project">Ctrl-O</span></div>
+                <div class="dropdown-item has-submenu" id="file-menu-recent">
+                    <span>Open Recent &gt;</span>
+                    <div class="submenu" id="recent-projects-list">
+                    </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="file-menu-save"><span>Save Project</span><span class="hotkey-text" data-hotkey-display="save-project">Ctrl-S</span></div>
+                <div class="dropdown-item" id="file-menu-save-as"><span>Save Project As...</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="file-menu-rename"><span>Rename Project...</span></div>
+                <div class="dropdown-item" id="file-menu-duplicate"><span>Duplicate Project...</span></div>
+                <div class="dropdown-item"><span>Remove Project...</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="file-menu-import"><span>Import...</span></div>
+                <div class="dropdown-item" id="file-menu-export-pdf"><span>Export PDF</span></div>
+                <div class="dropdown-item" id="file-menu-export-fdx"><span>Export Final Draft (.fdx)</span></div>
+                <div class="dropdown-item" id="file-menu-export-wd"><span>Export WriterDuet (.fountain)</span></div>
+                <div class="dropdown-item"><span>Preview</span></div>
+                <div class="dropdown-item" id="file-menu-print"><span>Print</span><span class="hotkey-text" data-hotkey-display="print">Ctrl-P</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="file-menu-close-tab"><span>Close Page</span></div>
+                <div class="dropdown-item" id="file-menu-close-other-tabs"><span>Close All Other Pages</span></div>
+            </div>
+        </div>
+        <div class="menu-item dropdown" id="edit-menu">Edit
+            <div class="dropdown-content">
+                <div class="dropdown-item" id="edit-undo"><span>Undo</span><span class="hotkey-text" data-hotkey-display="undo">Ctrl-Z</span></div>
+                <div class="dropdown-item" id="edit-redo"><span>Redo</span><span class="hotkey-text" data-hotkey-display="redo">Ctrl-Y</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="edit-cut"><span>Cut</span><span class="hotkey-text" data-hotkey-display="cut">Ctrl-X</span></div>
+                <div class="dropdown-item" id="edit-copy"><span>Copy</span><span class="hotkey-text" data-hotkey-display="copy">Ctrl-C</span></div>
+                <div class="dropdown-item" id="edit-paste"><span>Paste</span><span class="hotkey-text" data-hotkey-display="paste">Ctrl-V</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="edit-select-all"><span>Select All</span><span class="hotkey-text" data-hotkey-display="select-all">Ctrl-A</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="edit-find-replace"><span>Find & Replace...</span><span class="hotkey-text" data-hotkey-display="find-replace">Ctrl-F</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="edit-page-break"><span>Insert Page Break</span><span class="hotkey-text" data-hotkey-display="page-break">Ctrl-Enter</span></div>
+            </div>
+        </div>
+        <div class="menu-item dropdown" id="format-menu">Format
+            <div class="dropdown-content">
+                <div class="dropdown-item" onclick="setLineType('scene-heading')"><span>🖼️ Scene Heading</span><span class="hotkey-text" data-hotkey-display="scene-heading">Ctrl-1</span></div>
+                <div class="dropdown-item" onclick="setLineType('action')"><span>📢 Action</span><span class="hotkey-text" data-hotkey-display="action">Ctrl-2</span></div>
+                <div class="dropdown-item" onclick="setLineType('character')"><span>👤 Character</span><span class="hotkey-text" data-hotkey-display="character">Ctrl-3</span></div>
+                <div class="dropdown-item" onclick="setLineType('dialogue')"><span>💬 Dialogue</span><span class="hotkey-text" data-hotkey-display="dialogue">Ctrl-5</span></div>
+                <div class="dropdown-item" onclick="setLineType('parenthetical')"><span>() Parenthetical</span><span class="hotkey-text" data-hotkey-display="parenthetical">Ctrl-4</span></div>
+                <div class="dropdown-item" onclick="setLineType('dual')"><span>🗣 Dual Dialogue</span><span class="hotkey-text">Ctrl-D</span></div>
+                <div class="dropdown-item" onclick="setLineType('shot')"><span>📹 Shot</span><span class="hotkey-text" data-hotkey-display="shot">Ctrl-7</span></div>
+                <div class="dropdown-item" onclick="setLineType('transition')"><span>⇄ Transition</span><span class="hotkey-text" data-hotkey-display="transition">Ctrl-6</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="toggleCase()"><span>Aa Toggle Case</span><span class="hotkey-text" data-hotkey-display="toggle-case">Ctrl-Shift-U</span></div>
+            </div>
+        </div>
+        <div class="menu-item dropdown" id="view-menu">View
+            <div class="dropdown-content">
+                <div class="dropdown-item" id="view-toggle-focus"><span><span id="focus-mode-check" style="visibility:hidden; margin-right:6px;">✔</span>Toggle Focus Mode</span><span class="hotkey-text" data-hotkey-display="focus-mode">F11</span></div>
+                <div class="dropdown-item" id="view-toggle-page-numbers"><span><span id="page-numbers-check" style="visibility:hidden; margin-right:6px;">✔</span>Page Numbers</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item"><span>Full Screen</span></div>
+                <div class="dropdown-item" id="view-toggle-format-btns"><span><span id="format-btns-check" style="visibility:visible; margin-right:6px;">✔</span>Format Buttons</span></div>
+                <div class="dropdown-item" id="view-toggle-word-count"><span><span id="word-count-check" style="visibility:visible; margin-right:6px;">✔</span>Word Count</span></div>
+                <div class="dropdown-item" id="view-toggle-color-codes"><span><span id="color-codes-check" style="visibility:hidden; margin-right:6px;">✔</span>Color Codes</span></div>
+                <div class="dropdown-item" id="view-toggle-scene-numbers"><span><span id="scene-numbers-check" style="visibility:hidden; margin-right:6px;">✔</span>Scene Numbers</span></div>
+                <div class="dropdown-item" id="view-toggle-line-numbers"><span><span id="line-numbers-check" style="visibility:hidden; margin-right:6px;">✔</span>Line Numbers</span></div>
+                <div class="dropdown-item" id="view-toggle-save-location"><span><span id="save-location-check" style="visibility:hidden; margin-right:6px;">✔</span>Save Location</span></div>
+                <div class="dropdown-item" id="view-mindmap"><span>Mind Map</span></div>
+            </div>
+        </div>
+        <div class="menu-item dropdown" id="share-menu">Share
+            <div class="dropdown-content">
+                <div class="dropdown-item" id="share-load-latest"><span>Load Latest</span></div>
+                <div class="dropdown-item" id="share-save-latest"><span>Save Latest</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="share-gdrive"><span>Open Shared Google Folder</span></div>
+                <div class="dropdown-item" id="share-configure"><span>Configure Shared Folder...</span></div>
+            </div>
+        </div>
+        <div class="menu-item dropdown" id="tools-menu">Tools
+            <div class="dropdown-content">
+                <div class="dropdown-item has-submenu">
+                    <span>Text ▶</span>
+                    <div class="submenu">
+                        <div class="dropdown-item" id="tools-check-spelling"><span>Check Spelling</span><span class="hotkey-text"></span></div>
+                        <div class="dropdown-item" id="tools-fix-colors"><span>Fix Color Maps</span><span class="hotkey-text"></span></div>
+                        <div class="dropdown-item" id="tools-clean-spaces"><span>Clean Spacing</span></div>
+                        <div class="dropdown-item" id="tools-cut-double-parens"><span>Cut Double ( )</span></div>
+                        <div class="dropdown-item" id="tools-fix-parenths"><span>Fix Parenths</span></div>
+                    </div>
+                </div>
+                <div class="dropdown-item has-submenu">
+                    <span>Filters ▶</span>
+                    <div class="submenu">
+                        <div class="dropdown-item" id="tools-filter-dialogue"><span><span id="filter-dialogue-check" style="visibility:hidden; margin-right:6px;">✔</span>Dialogue Filter</span></div>
+                        <div class="dropdown-item" id="tools-filter-non-dialogue"><span><span id="filter-non-dialogue-check" style="visibility:hidden; margin-right:6px;">✔</span>Non-Dialogue Filter</span></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" id="tools-filter-custom"><span><span id="filter-custom-check" style="visibility:hidden; margin-right:6px;">✔</span>Custom Filter...</span></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" id="tools-char-filter"><span>Character Filter</span></div>
+                    </div>
+                </div>
+                <div class="dropdown-item has-submenu">
+                    <span>Char ▶</span>
+                    <div class="submenu">
+                        <div class="dropdown-item" id="tools-rename-character"><span>Rename Character</span></div>
+                        <div class="dropdown-item" id="tools-capitalize-names"><span>Capitalize Names</span></div>
+                        <div class="dropdown-item" id="tools-char-sheet"><span>Char Sheet</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="menu-item dropdown" id="reports-menu">Reports
+            <div class="dropdown-content">
+                <div class="dropdown-item" id="reports-doc-stats"><span>Document Statistics</span></div>
+                <div class="dropdown-item" id="reports-check-format"><span>Check Formatting</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="reports-ai-analysis"><span><span style="margin-right:6px;">🤖</span>AI Script Analysis</span></div>
+            </div>
+        </div>
+        <div class="menu-item dropdown" id="revisions-menu">Revisions
+            <div class="dropdown-content">
+                <div class="dropdown-item" id="rev-toggle-mode"><span><span id="rev-mode-check" style="visibility:hidden; margin-right:6px;">✔</span>Track Revisions</span></div>
+                <div class="dropdown-item" id="rev-clear-marks"><span>Clear All Revision Marks</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="rev-manage-snapshots"><span>Manage Snapshots...</span></div>
+            </div>
+        </div>
+        <div class="menu-item dropdown" id="customize-menu">Customize
+            <div class="dropdown-content">
+                <div class="dropdown-item" id="menu-author-profile"><span>Author Profile & Revision Color...</span></div>
+                <div class="dropdown-item" id="menu-set-api-key"><span>Set AI API Key...</span></div>
+                <div class="dropdown-item" id="menu-format-colors"><span>Format Colors...</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="menu-edit-hotkeys"><span>Edit Hotkeys...</span></div>
+                <div class="dropdown-item" id="menu-view-changelog"><span>What's New...</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="menu-toggle-darkmode"><span><span id="dark-mode-check" style="visibility:hidden; margin-right:6px;">✔</span>Dark Mode</span></div>
+            </div>
+        </div>
+        <div class="menu-item dropdown" id="help-menu">Help
+            <div class="dropdown-content">
+                <div class="dropdown-item" id="help-writers-guide"><span>📖 Writer's Guide</span></div>
+                <div class="dropdown-item" id="help-correction-logs"><span>📝 Correction Logs</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="menu-check-github-updates"><span>🔄 Check for Updates...</span></div>
+                <div class="menu-separator"></div>
+                <div class="dropdown-item" id="help-about"><span>ℹ️ About</span></div>
+            </div>
+        </div>
+        <div style="flex-grow: 1;"></div>
+    </div>
+
+    <div class="main-container">
+        <div class="icon-nav">
+            <div class="icon-nav-item active" id="nav-project-btn"><span class="icon-nav-icon">📋</span>Script</div>
+            <div class="icon-nav-item" id="nav-scenes-btn"><span class="icon-nav-icon">🎬</span>Scenes</div>
+            <div class="icon-nav-item" id="nav-notes-btn"><span class="icon-nav-icon">💬</span>My Notes</div>
+            <div class="icon-nav-item" id="nav-save-btn"><span class="icon-nav-icon">💾</span>Save</div>
+            <div class="icon-nav-item" id="nav-stay-top-btn"><span class="icon-nav-icon" id="stay-top-icon" style="color: var(--text-muted);">📌</span>On Top</div>
+        </div>
+        
+        <div class="project-sidebar">
+            <div id="sidebar-project-view" style="display: flex; flex-direction: column; flex: 1; height: 100%;">
+                <div class="sidebar-header">
+                    <span id="project-name-display">⬅ &nbsp; Untitled Project</span>
+                    <span style="cursor:pointer">⋮</span>
+                </div>
+                
+                <div class="sidebar-section">Project Documents</div>
+                <div id="project-documents-list">
+                    <div class="sidebar-item active" data-docname="Default Document">
+                        <span class="sidebar-icon">📄</span> Default Document <span style="margin-left:auto; background-color:#10b981; color:white; padding:2px 4px; font-size:9px; border-radius:3px; font-weight:bold;">SX</span>
+                    </div>
+                    <div class="sidebar-item" data-docname="Revision Notes">
+                        <span class="sidebar-icon">📝</span> Revision Notes
+                    </div>
+                    <div class="sidebar-item" data-docname="Title Page">
+                        <span class="sidebar-icon">📑</span> Title Page
+                    </div>
+                    <div class="sidebar-item" id="add-document-btn">
+                        <span class="sidebar-icon">➕</span> Add Document
+                    </div>
+                </div>
+
+                <div class="sidebar-spacer"></div>
+
+                <div class="sidebar-item" id="import-btn">
+                    <span class="sidebar-icon">📥</span> Import
+                </div>
+                <div class="sidebar-item" id="export-pdf-sidebar-btn">
+                <span class="sidebar-icon">📄</span> Export PDF
+                </div>
+                <div class="sidebar-item" id="btn-external-backups">
+                    <span class="sidebar-icon">💽</span> Manage Backups
+                </div>
+                
+                <div class="sidebar-footer">
+                    <div style="margin-bottom:6px; display:flex; align-items:center;"><div class="sync-dot" style="margin-right:6px; background-color:gray;"></div> <span style="color:var(--text-muted)">Last saved online: 11:59 AM</span></div>
+                    <div style="display:flex; align-items:center;"><div class="sync-dot" style="margin-right:6px;"></div> <span style="color:var(--text-muted)">Last saved offline: 11:57 AM</span></div>
+                </div>
+            </div>
+            
+            <div id="sidebar-scenes-view" style="display: none; flex-direction: column; flex: 1; height: 100%;">
+                <div class="sidebar-header">
+                    <span>📍 Locations & Scenes</span>
+                    <span style="cursor:pointer" onclick="buildScenesList()" title="Refresh Scenes">↻</span>
+                </div>
+                <div id="scenes-list" style="flex: 1; overflow-y: auto;">
+                    <!-- Scenes injected here -->
+                </div>
+            </div>
+        
+        <div id="sidebar-notes-view" style="display: none; flex-direction: column; flex: 1; height: 100%;">
+            <div class="sidebar-header">
+                <span>💬 My Notes (Local Only)</span>
+            </div>
+            <textarea id="local-notes-area" style="flex: 1; background: transparent; border: none; color: white; padding: 15px; outline: none; resize: none; font-family: inherit; font-size: 13px;" placeholder="Type your private notes here. These stay on your computer and won't be saved into the shared project file..."></textarea>
+        </div>
+        </div>
+        <div class="editor-area">
+            <div class="format-toolbar" id="toolbar">
+        <button class="tool-btn" data-type="scene-heading" onclick="setLineType('scene-heading')" title="Scene (Ctrl-1)" data-hotkey-display="scene-heading"><span class="tool-icon">🖼️</span><span class="tool-label">Scene</span></button>
+        <button class="tool-btn" data-type="action" onclick="setLineType('action')" title="Action (Ctrl-2)" data-hotkey-display="action"><span class="tool-icon">📢</span><span class="tool-label">Action</span></button>
+        <button class="tool-btn" data-type="character" onclick="setLineType('character')" title="Character (Ctrl-3)" data-hotkey-display="character"><span class="tool-icon">👤</span><span class="tool-label">Character</span></button>
+        <button class="tool-btn" data-type="dialogue" onclick="setLineType('dialogue')" title="Dialogue (Ctrl-5)" data-hotkey-display="dialogue"><span class="tool-icon">💬</span><span class="tool-label">Dialogue</span></button>
+        <button class="tool-btn" data-type="parenthetical" onclick="setLineType('parenthetical')" title="Parenthetical (Ctrl-4)" data-hotkey-display="parenthetical"><span class="tool-icon">()</span><span class="tool-label">Parens</span></button>
+        <button class="tool-btn" data-type="dual" onclick="setLineType('dual')" title="Dual Dialogue (Ctrl+D)"><span class="tool-icon">🗣</span><span class="tool-label">Dual</span></button>
+        <button class="tool-btn" data-type="shot" onclick="setLineType('shot')" title="Shot (Ctrl-7)" data-hotkey-display="shot"><span class="tool-icon">📹</span><span class="tool-label">Shot</span></button>
+        <button class="tool-btn" data-type="transition" onclick="setLineType('transition')" title="Transition (Ctrl-6)" data-hotkey-display="transition"><span class="tool-icon">⇄</span><span class="tool-label">Transition</span></button>
+    </div>
+    <div class="mini-toolbar">
+        <button class="mini-tool-btn" id="mini-bold" title="Bold (Ctrl-B)" data-hotkey-display="bold"><b>B</b></button>
+        <button class="mini-tool-btn" id="mini-italic" title="Italic (Ctrl-I)" data-hotkey-display="italic"><i>I</i></button>
+        <button class="mini-tool-btn" id="mini-underline" title="Underline (Ctrl-U)" data-hotkey-display="underline"><u>U</u></button>
+        <button class="mini-tool-btn" id="mini-case-toggle" title="Toggle Case (Ctrl-Shift-U)" data-hotkey-display="toggle-case"><b>Aa</b></button>
+        <div class="dropdown" id="text-color-menu" style="display: flex; align-items: center; height: 100%;">
+            <button class="mini-tool-btn" id="mini-text-color" title="Text Color">
+                <span style="border-bottom: 3px solid #ef4444; padding-bottom: 2px; font-weight: bold; font-size: 14px;">A</span>
+            </button>
+            <div class="dropdown-content" id="text-color-dropdown-content" style="top: 100%; left: 0; min-width: 150px; text-align: left; z-index: 10000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                <!-- Populated by script.js -->
+            </div>
+        </div>
+        <input type="color" id="custom-text-color-picker" style="display: none;">
+        <div class="mini-divider"></div>
+        <button class="mini-tool-btn" id="mini-align-left" title="Align Left">
+            <svg width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M1 3h14v1H1zM1 6h10v1H1zM1 9h14v1H1zM1 12h10v1H1z"/></svg>
+        </button>
+        <button class="mini-tool-btn" id="mini-align-center" title="Align Center">
+            <svg width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M1 3h14v1H1zM3 6h10v1H3zM1 9h14v1H1zM3 12h10v1H3z"/></svg>
+        </button>
+        <button class="mini-tool-btn" id="mini-align-right" title="Align Right">
+            <svg width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M1 3h14v1H1zM5 6h10v1H5zM1 9h14v1H1zM5 12h10v1H5z"/></svg>
+        </button>
+    </div>
+
+    <div class="workspace">
+        <div id="page-numbers-overlay" class="page-numbers-overlay"></div>
+        <div class="script-page" id="editor" contenteditable="true" spellcheck="true">
+            <p class="scene-heading">INT. SAMPLE SCENE - DAY</p>
+            <p class="action">The cursor blinks smoothly. The environment matches the layout rules completely.</p>
+            <p class="character">WRITER</p>
+            <p class="dialogue">It feels identical. No lag, no fluff, just writing.</p>
+        </div>
+    </div>
+
+    <!-- Docked AI Report Panel (shown after Reports → AI Script Analysis) -->
+    <div id="ai-report-sidebar" class="ai-report-sidebar" style="display:none;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 15px; background:#1a232c; border-bottom:1px solid #36424e; flex-shrink:0;">
+            <span style="font-weight:bold; font-size:13px;">🤖 AI Script Analysis — <span id="ai-report-title" style="color:#10b981;"></span></span>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button id="btn-copy-ai-report" style="background:#36424e; border:none; color:#d1d5db; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:11px;">📋 Copy</button>
+                <button id="btn-close-ai-report" style="background:transparent; border:none; color:#abb2bf; cursor:pointer; font-size:18px; line-height:1;" title="Close">✕</button>
+            </div>
+        </div>
+        <div id="ai-analysis-content" style="padding:15px; font-size:13px; line-height:1.7; color:#d1d5db; white-space:pre-wrap; overflow-y:auto; flex:1;"></div>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-left">
+            <div id="line-type-indicator">Current Element: Action</div>
+            <div class="status-divider"></div>
+            <div id="status-project-name" class="status-project">Untitled Project</div>
+            <div class="status-divider"></div>
+            <div id="status-stats">0 words | 1 page</div>
+            <div class="status-divider" id="status-save-location-divider" style="display:none;"></div>
+            <div id="status-save-location" style="display:none; color: var(--text-muted); max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title=""></div>
+        </div>
+        <div class="sync-badge">
+            <div class="sync-dot" id="syncDot"></div>
+            <span id="syncText">Local Backup Active</span>
+        </div>
+    </div>
+
+    <!-- Backup Configuration Modal -->
+    <div id="backup-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 550px;">
+            <h2>💽 Manage Backups & Auto-Save <span title="Backups are physical .xsp files automatically saved to your hard drive or cloud. They act as your safety net against computer crashes." style="cursor:help; font-size:14px; opacity:0.7;">❔</span></h2>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; margin-top: 5px;">Automatically save hard copies of your project to your computer or cloud drive.</p>
+            
+            <div class="backup-option" style="margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; cursor: pointer; color: white;">
+                    <input type="checkbox" id="chk-enable-autosave" style="width: 16px; height: 16px; cursor: pointer;">
+                    Enable Automatic Saving (Auto-Save on typing & intervals)
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div class="backup-option" style="flex: 1; margin-bottom: 0;">
+                    <h3>⏳ Auto-Save Interval</h3>
+                    <select id="auto-save-interval" style="background: #1a232c; color: white; border: 1px solid #36424e; padding: 6px; border-radius: 4px; font-size: 12px; outline: none; width: 100%; margin-top: 5px;">
+                        <option value="0">Off (Only save on pause)</option>
+                        <option value="1">Every 1 Minute</option>
+                        <option value="5">Every 5 Minutes</option>
+                        <option value="10">Every 10 Minutes</option>
+                        <option value="30">Every 30 Minutes</option>
+                    </select>
+                </div>
+                <div class="backup-option" style="flex: 1; margin-bottom: 0;">
+                    <h3>🔢 Max Backup Limit</h3>
+                    <input type="number" id="max-backup-limit" min="1" max="1000" style="background: #1a232c; color: white; border: 1px solid #36424e; padding: 6px; border-radius: 4px; font-size: 12px; outline: none; width: 100%; margin-top: 5px;">
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div class="backup-option" style="flex: 1; margin-bottom: 0;">
+                    <h3><span style="font-size: 16px;">☁️</span> Cloud Backup</h3>
+                    <p style="font-size: 10px; margin-bottom: 8px;">Select a root folder (e.g., Google Drive). Backups will automatically go into a subfolder named after this project.</p>
+                    <button id="btn-select-cloud-dir" class="modal-btn" style="background-color: #1b8adb; width: 100%; margin-bottom: 5px;">Select Folder</button>
+                    <div id="cloud-dir-status" class="backup-status" style="color:var(--text-muted); margin-left: 0; word-break: break-all;">Not configured</div>
+                </div>
+                <div class="backup-option" style="flex: 1; margin-bottom: 0;">
+                    <h3><span style="font-size: 16px;">💽</span> Local Backup</h3>
+                    <p style="font-size: 10px; margin-bottom: 8px;">Select a local root folder. Backups will automatically go into a subfolder named after this project.</p>
+                    <button id="btn-select-local-dir" class="modal-btn" style="background-color: #1b8adb; width: 100%; margin-bottom: 5px;">Select Folder</button>
+                    <div id="local-dir-status" class="backup-status" style="color:var(--text-muted); margin-left: 0; word-break: break-all;">Not configured</div>
+                </div>
+            </div>
+
+            <div class="backup-option">
+                <h3><span style="font-size: 16px;">⚡</span> Manual Backup</h3>
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                    <button id="btn-trigger-backup-now" class="modal-btn" style="background-color: #f59e0b;">Backup Now</button>
+                    <span id="last-backup-timestamp" style="font-size: 11px; color: var(--text-muted);"></span>
+                </div>
+            </div>
+
+            <button id="btn-close-modal" class="modal-btn" style="background-color: #4a5568; margin-top: 5px; width: 100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- New Project Modal -->
+    <div id="new-project-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 450px;">
+            <h2>📝 Create New Project</h2>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">Set your project name and select your local save location. The cloud share folder will be created automatically.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <label style="font-size: 12px; color: var(--text-muted);">Project Name:</label>
+                <input type="text" id="new-project-name" placeholder="e.g., Untitled Project" style="background: #1a232c; border: 1px solid #36424e; color: white; padding: 8px; border-radius: 4px; outline: none;">
+                
+                <label style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Cloud Folder (Google Drive\scripts):</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="new-project-cloud-dir" readonly placeholder="Select Google Drive scripts folder..." style="flex: 1; background: #12181f; border: 1px solid #36424e; color: var(--text-muted); padding: 8px; border-radius: 4px; outline: none;">
+                    <button id="btn-browse-new-cloud" class="modal-btn" style="background-color: #1b8adb;">Browse...</button>
+                </div>
+
+                <label style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Local Save Location (Backup):</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="new-project-local-dir" readonly placeholder="Select a local folder..." style="flex: 1; background: #12181f; border: 1px solid #36424e; color: var(--text-muted); padding: 8px; border-radius: 4px; outline: none;">
+                    <button id="btn-browse-new-local" class="modal-btn" style="background-color: #1b8adb;">Browse...</button>
+                </div>
+            </div>
+
+            <button id="btn-create-new-project" class="modal-btn" style="background-color: #10b981; width: 100%; margin-bottom: 10px;">Create Project</button>
+            <button id="btn-cancel-new-project" class="modal-btn" style="background-color: #4a5568; width: 100%;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Hotkeys Modal -->
+    <div id="hotkeys-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 450px;">
+            <h2>⌨️ Edit Hotkeys</h2>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">Click an input field and press your desired key combination.</p>
+            
+            <div class="backup-option" style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
+                <h3 style="color: #1b8adb; margin: 0 0 10px 0; font-size: 13px;">Formatting</h3>
+                <div class="hotkey-row"><span>Scene Heading</span><input type="text" class="hotkey-input" data-action="scene-heading" readonly></div>
+                <div class="hotkey-row"><span>Action</span><input type="text" class="hotkey-input" data-action="action" readonly></div>
+                <div class="hotkey-row"><span>Character</span><input type="text" class="hotkey-input" data-action="character" readonly></div>
+                <div class="hotkey-row"><span>Parenthetical</span><input type="text" class="hotkey-input" data-action="parenthetical" readonly></div>
+                <div class="hotkey-row"><span>Dialogue</span><input type="text" class="hotkey-input" data-action="dialogue" readonly></div>
+                <div class="hotkey-row"><span>Transition</span><input type="text" class="hotkey-input" data-action="transition" readonly></div>
+                <div class="hotkey-row"><span>Shot</span><input type="text" class="hotkey-input" data-action="shot" readonly></div>
+                <div class="hotkey-row"><span>Page Break</span><input type="text" class="hotkey-input" data-action="page-break" readonly></div>
+                
+                <h3 style="color: #1b8adb; margin: 15px 0 10px 0; font-size: 13px;">Styles & Editing</h3>
+                <div class="hotkey-row"><span>Bold</span><input type="text" class="hotkey-input" data-action="bold" readonly></div>
+                <div class="hotkey-row"><span>Italic</span><input type="text" class="hotkey-input" data-action="italic" readonly></div>
+                <div class="hotkey-row"><span>Underline</span><input type="text" class="hotkey-input" data-action="underline" readonly></div>
+                <div class="hotkey-row"><span>Strikethrough</span><input type="text" class="hotkey-input" data-action="strikethrough" readonly></div>
+                <div class="hotkey-row"><span>Toggle Case</span><input type="text" class="hotkey-input" data-action="toggle-case" readonly></div>
+                <div class="hotkey-row"><span>Add Revision Mark</span><input type="text" class="hotkey-input" data-action="add-revision" readonly></div>
+                <div class="hotkey-row"><span>Remove Revision Mark</span><input type="text" class="hotkey-input" data-action="remove-revision" readonly></div>
+                <div class="hotkey-row"><span>Undo</span><input type="text" class="hotkey-input" data-action="undo" readonly></div>
+                <div class="hotkey-row"><span>Redo</span><input type="text" class="hotkey-input" data-action="redo" readonly></div>
+                <div class="hotkey-row"><span>Cut</span><input type="text" class="hotkey-input" data-action="cut" readonly></div>
+                <div class="hotkey-row"><span>Copy</span><input type="text" class="hotkey-input" data-action="copy" readonly></div>
+                <div class="hotkey-row"><span>Paste</span><input type="text" class="hotkey-input" data-action="paste" readonly></div>
+                <div class="hotkey-row"><span>Select All</span><input type="text" class="hotkey-input" data-action="select-all" readonly></div>
+
+                <h3 style="color: #1b8adb; margin: 15px 0 10px 0; font-size: 13px;">Application</h3>
+                <div class="hotkey-row"><span>Find & Replace</span><input type="text" class="hotkey-input" data-action="find-replace" readonly></div>
+                <div class="hotkey-row"><span>Open Project</span><input type="text" class="hotkey-input" data-action="open-project" readonly></div>
+                <div class="hotkey-row"><span>Save Project</span><input type="text" class="hotkey-input" data-action="save-project" readonly></div>
+                <div class="hotkey-row"><span>Manage Backups</span><input type="text" class="hotkey-input" data-action="manage-backups" readonly></div>
+                <div class="hotkey-row"><span>Print</span><input type="text" class="hotkey-input" data-action="print" readonly></div>
+                <div class="hotkey-row"><span>Focus Mode</span><input type="text" class="hotkey-input" data-action="focus-mode" readonly></div>
+                <div class="hotkey-row"><span>Toggle Menu Bar</span><input type="text" class="hotkey-input" data-action="toggle-menu" readonly></div>
+            </div>
+
+            <button id="btn-save-hotkeys" class="modal-btn" style="background-color: #1b8adb; margin-top: 10px; width: 100%;">Save Hotkeys</button>
+            <button id="btn-close-hotkeys" class="modal-btn" style="background-color: #4a5568; margin-top: 10px; width: 100%;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Author Profile Modal -->
+    <div id="author-profile-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 350px;">
+            <h2>👤 Author Profile</h2>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">Set your name and the color of your revision asterisks to easily track who made which changes.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <label style="font-size: 12px; color: var(--text-muted);">Author Name:</label>
+                <input type="text" id="author-name-input" placeholder="e.g., Jane Doe" style="background: #1a232c; border: 1px solid #36424e; color: white; padding: 8px; border-radius: 4px; outline: none;">
+                
+                <label style="font-size: 12px; color: var(--text-muted);">Revision Color:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="color" id="author-color-input" value="#ef4444" style="background: transparent; border: none; outline: none; cursor: pointer; height: 30px; width: 40px; padding: 0;">
+                    <span style="font-size: 12px; color: var(--text-muted);">Select your custom asterisk color</span>
+                </div>
+            </div>
+
+            <button id="btn-save-author" class="modal-btn" style="background-color: #1b8adb; width: 100%; margin-bottom: 10px;">Save Profile</button>
+            <button id="btn-close-author" class="modal-btn" style="background-color: #4a5568; width: 100%;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Format Colors Modal -->
+    <div id="format-colors-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 400px;">
+            <h2>🎨 Format Colors</h2>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">Customize the display color of each screenplay element. These colors will only appear on your screen and will NEVER export or print.</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-size: 12px; color: var(--text-muted);">Scene Heading</label>
+                    <input type="color" class="format-color-picker" data-element="scene" style="background: transparent; border: none; outline: none; cursor: pointer; height: 24px; width: 30px; padding: 0;">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-size: 12px; color: var(--text-muted);">Action</label>
+                    <input type="color" class="format-color-picker" data-element="action" style="background: transparent; border: none; outline: none; cursor: pointer; height: 24px; width: 30px; padding: 0;">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-size: 12px; color: var(--text-muted);">Character</label>
+                    <input type="color" class="format-color-picker" data-element="character" style="background: transparent; border: none; outline: none; cursor: pointer; height: 24px; width: 30px; padding: 0;">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-size: 12px; color: var(--text-muted);">Dialogue / Dual</label>
+                    <input type="color" class="format-color-picker" data-element="dialogue" style="background: transparent; border: none; outline: none; cursor: pointer; height: 24px; width: 30px; padding: 0;">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-size: 12px; color: var(--text-muted);">Parenthetical</label>
+                    <input type="color" class="format-color-picker" data-element="parenthetical" style="background: transparent; border: none; outline: none; cursor: pointer; height: 24px; width: 30px; padding: 0;">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-size: 12px; color: var(--text-muted);">Transition</label>
+                    <input type="color" class="format-color-picker" data-element="transition" style="background: transparent; border: none; outline: none; cursor: pointer; height: 24px; width: 30px; padding: 0;">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-size: 12px; color: var(--text-muted);">Shot</label>
+                    <input type="color" class="format-color-picker" data-element="shot" style="background: transparent; border: none; outline: none; cursor: pointer; height: 24px; width: 30px; padding: 0;">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-save-colors" class="modal-btn" style="flex: 1; background-color: #10b981;">Save Colors</button>
+                <button id="btn-reset-colors" class="modal-btn" style="flex: 1; background-color: #f59e0b;">Reset to Defaults</button>
+            </div>
+            <button id="btn-close-colors" class="modal-btn" style="background-color: #4a5568; margin-top: 10px; width: 100%;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Custom Context Menu -->
+    <div id="context-menu" class="context-menu">
+        <div id="spell-suggestions-container" style="display:none;">
+            <!-- Suggestions injected here -->
+            <div class="dropdown-divider"></div>
+        </div>
+        <div id="revision-menu-container" style="display:none;">
+            <div class="context-menu-item" id="ctx-rev-approve">✅ Approve</div>
+            <div class="context-menu-item" id="ctx-rev-note">📝 Note</div>
+            <div class="dropdown-divider"></div>
+        </div>
+        <div class="context-menu-item" id="ctx-ai-fix" style="color: #10b981; font-weight: bold;">✨ AI Auto-Fix Selection</div>
+        <div class="dropdown-divider"></div>
+        <div class="context-menu-item" id="ctx-cut">Cut</div>
+        <div class="context-menu-item" id="ctx-copy">Copy</div>
+        <div class="context-menu-item" id="ctx-paste">Paste</div>
+        <div class="dropdown-divider"></div>
+        <div class="context-menu-item" id="ctx-select-all">Select All</div>
+    </div>
+
+    <!-- Spellcheck Modal -->
+    <div id="spellcheck-modal" class="modal-overlay" style="display: none; background-color: transparent; pointer-events: none;">
+        <div class="modal-content" id="spellcheck-content" style="width: 400px; pointer-events: auto; position: absolute; top: 10%; right: 5%; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+            <h2 id="spellcheck-header" style="cursor: move; user-select: none;">📝 Check Spelling</h2>
+            <div id="spellcheck-complete" style="display:none; text-align:center; padding: 20px;">
+                <p>Spell check complete!</p>
+                <button class="modal-btn" onclick="document.getElementById('spellcheck-modal').style.display='none'" style="margin-top:15px; width:100%">Close</button>
+            </div>
+            <div id="spellcheck-active">
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">Not in dictionary:</p>
+                <div id="spellcheck-word" style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #ef4444;">Word</div>
+                
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">Suggestions:</p>
+                <select id="spellcheck-suggestions" size="5" style="width: 100%; background: #1a232c; color: white; border: 1px solid #36424e; border-radius: 4px; padding: 5px; margin-bottom: 5px; outline: none;"></select>
+                <input type="text" id="spellcheck-custom-correction" placeholder="Or type correction here..." style="width: 100%; background: #1a232c; color: white; border: 1px solid #36424e; border-radius: 4px; padding: 6px; margin-bottom: 15px; outline: none; box-sizing: border-box;">
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button id="btn-spell-ignore" class="modal-btn" style="flex: 1; background-color: #4a5568;">Ignore</button>
+                    <button id="btn-spell-next" class="modal-btn" style="flex: 1; background-color: #4a5568;">Next</button>
+                    <button id="btn-spell-add" class="modal-btn" style="flex: 1; background-color: #1b8adb;">Add to Dict</button>
+                    <button id="btn-spell-change" class="modal-btn" style="flex: 1; background-color: #10b981;">Change</button>
+                </div>
+                <button class="modal-btn" onclick="document.getElementById('spellcheck-modal').style.display='none'" style="width: 100%; background-color: transparent; border: 1px solid #36424e; margin-top: 15px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Snapshots Modal -->
+    <div id="snapshots-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <h2>📸 Manage Snapshots <span title="Snapshots are instant, manual save-states stored internally inside XenoScript. They act as your 'Undo' points for rapid experimentation within a single editing session." style="cursor:help; font-size:14px; opacity:0.7;">❔</span></h2>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; margin-top: 5px;">Save the current state of your entire project to instantly roll back to later without messing with files.</p>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="snapshot-name-input" placeholder="e.g., Sister's Edits V1" style="flex:1; background: #1a232c; border: 1px solid #36424e; color: white; padding: 6px 10px; border-radius: 4px; font-size: 12px; outline: none;">
+                <button id="btn-create-snapshot" class="modal-btn" style="background-color: #10b981;">Create Snapshot</button>
+            </div>
+            <div class="backup-option" style="max-height: 250px; overflow-y: auto;" id="snapshots-list">
+                <!-- Snapshots will be injected here -->
+            </div>
+            <button id="btn-close-snapshots" class="modal-btn" style="background-color: #4a5568; margin-top: 10px; width: 100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- GitHub Update Modal -->
+    <div id="github-update-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 480px;">
+            <h3 style="margin-top:0; border-bottom: 1px solid #36424e; padding-bottom: 10px; margin-bottom: 15px;">
+                🔄 Update Check
+            </h3>
+            <div id="github-update-checking" style="margin-bottom: 15px; font-weight: bold;">
+                Checking for updates...
+            </div>
+            <div id="github-update-result" style="display:none;">
+                <div id="github-update-body"></div>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button id="btn-goto-github" class="modal-btn" style="background-color: #1b8adb; flex: 1; display:none;" onclick="downloadAndInstallUpdate(this)">
+                        Update
+                    </button>
+                    <button id="btn-close-github-update" class="modal-btn" style="background-color: #4a5568; flex: 1;">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 400px; text-align: center;">
+            <img src="xenohead_logo.png" alt="XenoHead Logo" style="width: 120px; height: 120px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+            <h2 style="margin: 0; font-family: 'Outfit', sans-serif; color: #f8fafc;">XenoScript</h2>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 5px;">Version <span id="about-version">6.2.0</span></p>
+            <div style="margin: 20px 0; padding: 15px; background: #131a2c; border-radius: 8px; border: 1px solid #2d3748;">
+                <p style="margin: 0; color: #e2e8f0; font-weight: bold;">Built by XenoHead</p>
+                <a href="#" onclick="window.pywebview ? window.pywebview.api.open_url('https://www.xenohead.com') : window.open('https://www.xenohead.com','_blank')" style="color: #1b8adb; text-decoration: none; font-size: 0.9rem; display: block; margin-top: 5px;">www.xenohead.com</a>
+            </div>
+            <button id="btn-close-about" class="modal-btn" style="background-color: #4a5568; width: 100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- Char Sheet Modal -->
+    <div id="char-sheet-modal" class="modal-overlay" style="display: none; z-index: 10000;">
+        <div class="modal-content" style="width: 850px; height: 650px; padding: 0; display: flex; flex-direction: column; overflow: hidden; max-height: 90vh;">
+            <div class="modal-header" style="padding: 15px; border-bottom: 1px solid #36424e; display: flex; justify-content: space-between; align-items: center; background: #1a222c;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    Character Sheet
+                    <button id="btn-char-sheet-help" style="background:#2d3748; border:1px solid #4a5568; color:#94a3b8; border-radius:50%; width:20px; height:20px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; justify-content:center; align-items:center;">?</button>
+                </h3>
+                <button id="btn-close-char-sheet" style="background:none; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            
+            <!-- Char Sheet Help Popup -->
+            <div id="char-sheet-help-modal" style="display: none; position: absolute; top: 60px; left: 15px; background: #1e293b; border: 1px solid #475569; border-radius: 6px; padding: 15px; width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 10002;">
+                <p style="margin: 0; color: #f1f5f9; font-size: 13px; line-height: 1.4;">Manual entry only. This data is not pulled from your script. Future characters can be added without affecting your script.</p>
+                <button id="btn-close-char-help" style="margin-top: 10px; background: #3b82f6; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; float: right;">Got it</button>
+            </div>
+            <div style="display: flex; flex: 1; overflow: hidden;">
+                <!-- Sidebar -->
+                <div style="width: 220px; background: #161d27; border-right: 1px solid #36424e; display: flex; flex-direction: column;">
+                    <div style="padding: 15px 10px; border-bottom: 1px solid #36424e;">
+                        <button id="btn-add-char-group" class="modal-btn" style="width: 100%; background: #2d3748; padding: 8px; font-size: 13px;">+ New Group</button>
+                    </div>
+                    <div id="char-sheet-sidebar-groups" style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 5px;">
+                        <!-- Group buttons injected here -->
+                    </div>
+                </div>
+                
+                <!-- Main Content -->
+                <div style="flex: 1; display: flex; flex-direction: column; background: #0f1523;">
+                    <div style="padding: 10px 15px; border-bottom: 1px solid #36424e; display: flex; gap: 10px; align-items: center; background: #1a222c;">
+                        <button id="btn-add-character" class="modal-btn" style="background: #10b981; padding: 6px 15px; font-size: 13px; font-weight: bold;">+ Add Character</button>
+                        <div style="flex: 1;"></div>
+                        <span style="font-size: 13px; color: var(--text-muted);">Sort By:</span>
+                        <select id="char-sheet-sort" style="background: #2d3748; color: white; border: 1px solid #4a5568; border-radius: 4px; padding: 5px; font-size: 13px; outline: none;">
+                            <option value="abc">A-Z</option>
+                            <option value="lines">Lines</option>
+                            <option value="scenes">Scenes</option>
+                        </select>
+                        <button id="btn-char-sheet-sort-dir" style="background: #2d3748; color: white; border: 1px solid #4a5568; border-radius: 4px; padding: 4px 10px; font-size: 14px; cursor: pointer; margin-right: 10px;">↓</button>
+                        <label style="color: var(--text-muted); font-size: 13px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <input type="checkbox" id="char-sheet-compact-toggle"> Compact
+                        </label>
+                    </div>
+                    <div id="char-sheet-list" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+                        <!-- Character items injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Char Sheet Focus Modal -->
+    <div id="char-sheet-focus-modal" class="modal-overlay" style="display: none; z-index: 10001;">
+        <div class="modal-content" style="width: 600px; height: 500px; display: flex; flex-direction: column; background: #0f1523; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #36424e; padding-bottom: 15px; margin-bottom: 15px;">
+                <h3 id="char-sheet-focus-title" style="margin: 0; color: #f8fafc; font-size: 20px;">Character Name</h3>
+                <button id="btn-close-char-focus" style="background:none; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <textarea id="char-sheet-focus-textarea" style="flex: 1; width: 100%; background: #1a222c; color: #e2e8f0; border: 1px solid #36424e; border-radius: 4px; padding: 15px; resize: none; outline: none; font-family: Inter, sans-serif; font-size: 14px;" placeholder="Add notes, character bio, etc..."></textarea>
+            <div style="text-align: right; margin-top: 15px;">
+                <button id="btn-save-char-focus" class="modal-btn" style="background: #10b981; padding: 8px 20px; font-weight: bold;">Save & Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Statistics Modal -->
+    <div id="doc-stats-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 540px;">
+            <h2>📊 Document Statistics</h2>
+            <div id="doc-stats-body" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Injected by JS -->
+            </div>
+            <button id="btn-close-doc-stats" class="modal-btn" style="background-color: #4a5568; margin-top: 16px; width: 100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- Check Formatting Modal (draggable floating panel) -->
+    <div id="check-format-modal" class="modal-overlay" style="display: none; background-color: transparent; pointer-events: none;">
+        <div class="modal-content" id="check-format-content" style="width: 480px; pointer-events: auto; position: absolute; top: 8%; right: 2%; box-shadow: 0 10px 40px rgba(0,0,0,0.9); max-height: 80vh; display: flex; flex-direction: column;">
+            <h2 id="check-format-header" style="cursor: move; user-select: none; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
+                <span>✅ Check Formatting</span>
+                <span id="check-format-issue-counter" style="font-size: 12px; font-weight: normal; color: var(--text-muted);"></span>
+            </h2>
+            <div id="check-format-summary" style="margin-bottom: 10px; font-size: 13px; color: var(--text-muted); flex-shrink: 0;"></div>
+            <div id="check-format-body" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; min-height: 0;">
+                <!-- Injected by JS -->
+            </div>
+            <button id="btn-close-check-format" class="modal-btn" style="background-color: #4a5568; margin-top: 14px; width: 100%; flex-shrink: 0;">Close</button>
+        </div>
+    </div>
+
+    <!-- Exit Focus Mode Button -->
+    <div id="exit-focus-mode-btn" class="exit-focus-btn" title="Exit Focus Mode (F11)">
+        ❌ Exit Focus Mode
+    </div>
+
+    <!-- Rename Character Modal -->
+    <div id="rename-char-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 400px;">
+            <h2>✏️ Rename Character</h2>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">Select a character to rename throughout the current document.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <label style="font-size: 12px; color: var(--text-muted);">Current Name:</label>
+                <select id="rename-char-old" style="background: #1a232c; border: 1px solid #36424e; color: white; padding: 8px; border-radius: 4px; outline: none;"></select>
+                
+                <label style="font-size: 12px; color: var(--text-muted);">New Name:</label>
+                <input type="text" id="rename-char-new" placeholder="e.g., JOHN" style="background: #1a232c; border: 1px solid #36424e; color: white; padding: 8px; border-radius: 4px; outline: none; text-transform: uppercase;">
+                
+                <label style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 5px;">
+                    <input type="checkbox" id="rename-char-all-lines" checked>
+                    Smart-rename references in Action & Dialogue lines
+                </label>
+            </div>
+
+            <button id="btn-apply-rename" class="modal-btn" style="background-color: #10b981; width: 100%; margin-bottom: 10px;">Rename Character</button>
+            <button id="btn-close-rename-char" class="modal-btn" style="background-color: #4a5568; width: 100%;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Find & Replace Modal -->
+    <div id="find-replace-modal" class="modal-overlay" style="display: none; background-color: transparent; pointer-events: none;">
+        <div class="modal-content" id="find-replace-content" style="width: 400px; pointer-events: auto; position: absolute; top: 15%; right: 5%; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+            <h2 id="find-replace-header" style="cursor: move; user-select: none;">🔍 Find & Replace</h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <label style="font-size: 12px; color: var(--text-muted);">Find:</label>
+                <input type="text" id="find-input" placeholder="Text to find..." style="background: #1a232c; border: 1px solid #36424e; color: white; padding: 8px; border-radius: 4px; outline: none;">
+                
+                <label style="font-size: 12px; color: var(--text-muted);">Replace with:</label>
+                <input type="text" id="replace-input" placeholder="Replacement text..." style="background: #1a232c; border: 1px solid #36424e; color: white; padding: 8px; border-radius: 4px; outline: none;">
+                
+                <label style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 5px;">
+                    <input type="checkbox" id="find-match-case">
+                    Match case
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button id="btn-find-next" class="modal-btn" style="flex: 1; background-color: #1b8adb;">Find Next</button>
+                <button id="btn-replace" class="modal-btn" style="flex: 1; background-color: #f59e0b;">Replace</button>
+                <button id="btn-replace-all" class="modal-btn" style="flex: 1; background-color: #ef4444;">Replace All</button>
+            </div>
+            <button class="modal-btn" onclick="document.getElementById('find-replace-modal').style.display='none'" style="width: 100%; background-color: transparent; border: 1px solid #36424e; margin-top: 15px;">Close</button>
+        </div>
+    </div>
+
+    <!-- Character Filter Modal -->
+    <div id="char-filter-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 400px;">
+            <h2>👥 Character Filter</h2>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">Select the characters whose dialogue you want to isolate.</p>
+            
+            <label style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 10px;">
+                <input type="checkbox" id="char-filter-speaking-only" checked>
+                Hide non-speaking characters
+            </label>
+
+            <div id="char-filter-list" class="backup-option" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;">
+                <!-- Checkboxes injected here -->
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button id="btn-apply-char-filter" class="modal-btn" style="flex: 1; background-color: #1b8adb;">Apply Filter</button>
+                <button id="btn-clear-char-filter" class="modal-btn" style="flex: 1; background-color: #ef4444;">Clear Filter</button>
+            </div>
+            <button id="btn-close-char-filter" class="modal-btn" style="background-color: #4a5568; margin-top: 10px; width: 100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- Exit Character Filter Button -->
+    <div id="exit-char-filter-btn" title="Exit Character Filter">
+        ❌ Exit Character Filter
+    </div>
+
+    <!-- Cloud Load Confirmation Modal -->
+    <div id="cloud-load-confirm-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 450px; text-align: center; border-radius: 12px; border: 1px solid #36424e; background: var(--topbar-bg); box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+            <div style="font-size: 40px; margin-bottom: 15px;">☁️</div>
+            <h2 style="margin-top: 0; border: none; padding: 0; margin-bottom: 10px; font-size: 20px; font-weight: bold; color: white;">Load Latest from Cloud</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.5;">
+                Loading the cloud copy will <strong>overwrite</strong> your currently loaded project. 
+                Would you like to save your current local file first so you don't lose any changes?
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="btn-cloud-load-save-first" class="modal-btn" style="background-color: #10b981; font-weight: bold; padding: 10px 16px; font-size: 13px;">💾 Save & Load Latest</button>
+                <button id="btn-cloud-load-without-saving" class="modal-btn" style="background-color: #f59e0b; font-weight: bold; padding: 10px 16px; font-size: 13px;">⚡ Load Without Saving</button>
+                <button id="btn-cloud-load-cancel" class="modal-btn" style="background-color: #4a5568; padding: 8px 16px; font-size: 13px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Correction Logs Modal -->
+    <div id="correction-logs-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 700px; max-width: 90vw; border-radius: 12px; border: 1px solid #36424e; background: var(--topbar-bg); box-shadow: 0 20px 40px rgba(0,0,0,0.6); display: flex; flex-direction: column; max-height: 85vh;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #36424e; padding-bottom: 10px;">
+                <h2 style="margin: 0; border: none; padding: 0; font-size: 18px; font-weight: bold; color: white;">📝 Auto-Format Correction Logs</h2>
+                <button id="btn-close-correction-logs-top" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 20px;">×</button>
+            </div>
+            <div id="correction-logs-content" style="flex: 1; overflow-y: auto; padding-right: 5px; font-size: 13px; line-height: 1.6; color: #d1d5db; margin-bottom: 15px;">
+                <!-- Logs dynamically loaded here -->
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-clear-correction-logs" class="modal-btn" style="flex: 1; background-color: #ef4444; font-weight: bold; padding: 10px; border-radius: 6px;">Clear Logs</button>
+                <button id="btn-close-correction-logs" class="modal-btn" style="flex: 1; background-color: #4a5568; font-weight: bold; padding: 10px; border-radius: 6px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Filter Modal -->
+    <div id="custom-filter-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 400px; max-width: 90vw; border-radius: 12px; border: 1px solid #36424e; background: var(--topbar-bg); box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #36424e; padding-bottom: 10px;">
+                <h2 style="margin: 0; font-size: 18px; font-weight: bold; color: white;">🎛️ Custom Filter</h2>
+                <button id="btn-close-custom-filter-top" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 20px;">×</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 0; margin-bottom: 15px;">Select the line types you want to SEE.</p>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; color: #d1d5db; font-size: 14px;" id="custom-filter-checkboxes">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="scene-heading"> Scene Heading</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="action"> Action</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="character"> Character</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="dialogue"> Dialogue</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="parenthetical"> Parenthetical</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="dual"> Dual Dialogue</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="transition"> Transition</label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" value="shot"> Shot</label>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-apply-custom-filter" class="modal-btn" style="flex: 1; background-color: #3b82f6; font-weight: bold; padding: 10px; border-radius: 6px;">Apply</button>
+                <button id="btn-clear-custom-filter" class="modal-btn" style="flex: 1; background-color: #ef4444; font-weight: bold; padding: 10px; border-radius: 6px;">Turn Off</button>
+                <button id="btn-cancel-custom-filter" class="modal-btn" style="flex: 1; background-color: #4a5568; font-weight: bold; padding: 10px; border-radius: 6px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Changelog Modal -->
+    <div id="changelog-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 480px; border-radius: 12px; border: 1px solid #36424e; background: var(--topbar-bg); box-shadow: 0 20px 40px rgba(0,0,0,0.6); display: flex; flex-direction: column; max-height: 80vh;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #36424e; padding-bottom: 10px;">
+                <span style="font-size: 24px;">🚀</span>
+                <h2 style="margin: 0; border: none; padding: 0; font-size: 18px; font-weight: bold; color: white;">What's New in XenoScript <span id="changelog-version-title">2.5</span></h2>
+            </div>
+            <div id="changelog-content" style="flex: 1; overflow-y: auto; padding-right: 5px; font-size: 13px; line-height: 1.6; color: #d1d5db; margin-bottom: 20px;">
+                <!-- Changelog bullets dynamically loaded here -->
+            </div>
+            <button id="btn-close-changelog" class="modal-btn" style="background-color: #1b8adb; font-weight: bold; padding: 10px; width: 100%; border-radius: 6px;">Awesome!</button>
+        </div>
+    </div>
+
+    <!-- Capitalize Names Modal -->
+    <div id="cap-names-modal" class="modal-overlay" style="display: none; z-index: 10005;">
+        <div class="modal-content" style="width: 450px; display: flex; flex-direction: column; max-height: 70vh;">
+            <h2 style="margin-top: 0;">Capitalize Names</h2>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 15px;">
+                Find and capitalize all character names inside non-dialogue blocks. Uncheck common words that shouldn't be capitalized everywhere.
+            </p>
+            <div id="cap-names-list" style="flex: 1; overflow-y: auto; background: #0f1523; border: 1px solid #36424e; border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px;">
+                <!-- Checkboxes populated here -->
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button id="btn-cap-select-all" class="modal-btn" style="flex: 1; font-size: 12px; padding: 5px;">Select All</button>
+                <button id="btn-cap-deselect-all" class="modal-btn" style="flex: 1; font-size: 12px; padding: 5px;">Deselect All</button>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-execute-cap-names" class="modal-btn" style="flex: 1; background-color: #10b981; font-weight: bold; padding: 10px; border-radius: 6px;">Capitalize Selected</button>
+                <button id="btn-close-cap-names" class="modal-btn" style="flex: 1; background-color: #4a5568; font-weight: bold; padding: 10px; border-radius: 6px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="file-import" style="display: none;" accept=".txt,.html,.pdf,.fountain,.fdx">
+
+    <script src="script.js"></script>
+</body>
+</html>

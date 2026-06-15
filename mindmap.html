@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XenoScript - Mind Map</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="mindmap.css">
+</head>
+<body>
+    <div id="sidebar">
+        <div class="sidebar-header">Mind Map</div>
+        <div class="tab active" data-target="corkboard">Scene Corkboard</div>
+        <div class="tab" data-target="character-bible" style="display: none;">Character Bible</div>
+        <div class="tab" data-target="freeform">Freeform Board</div>
+    </div>
+
+    <div id="content">
+        <div class="global-toolbar">
+            <button id="btn-toggle-collapse">Toggle Size</button>
+            <button id="btn-sort-cards">Reset Layout</button>
+            <button id="btn-add-group">+ Add Group</button>
+            <label for="sort-select" style="margin-left: 15px; align-self: center; font-size: 14px; font-weight: 500;">Sort By:</label>
+            <select id="sort-select" style="padding: 5px; border-radius: 4px; background: #333; color: white; border: 1px solid #555;">
+                <option value="none">None</option>
+                <option value="lines">Dialogue Lines</option>
+                <option value="scenes">Scene Count</option>
+                <option value="abc">A-Z</option>
+                <option value="first">First Scene</option>
+            </select>
+            <button id="add-sticky-btn" style="display:none;">+ Add Note</button>
+        </div>
+        <!-- Corkboard View -->
+        <div id="corkboard" class="view active">
+            <div id="corkboard-canvas"></div>
+        </div>
+
+        <!-- Character Bible View -->
+        <div id="character-bible" class="view">
+            <div id="character-bible-canvas"></div>
+        </div>
+
+        <!-- Freeform Board View -->
+        <div id="freeform" class="view">
+            <div id="freeform-canvas"></div>
+        </div>
+    </div>
+
+    <div id="card-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div id="modal-title" class="modal-title">Title</div>
+                <button id="modal-close">&times;</button>
+            </div>
+            <div id="modal-body" class="modal-body">Body</div>
+            <div class="modal-notes-label">Notes & Details:</div>
+            <div id="modal-notes" class="modal-notes" contenteditable="true"></div>
+        </div>
+    </div>
+
+    <!-- Edit Card Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <div class="modal-title">Edit Card</div>
+                <button id="edit-modal-close" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="color: var(--text-muted); font-size: 12px; margin-bottom: 5px; display: block; font-weight: bold;">Title</label>
+                <div id="edit-modal-title" contenteditable="true" style="width: 100%; min-height: 30px; background: #2a2a2a; border: 1px solid #444; border-radius: 4px; padding: 10px; color: white; outline: none; font-size: 14px;"></div>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="color: var(--text-muted); font-size: 12px; margin-bottom: 5px; display: block; font-weight: bold;">Body Content (HTML Allowed)</label>
+                <div id="edit-modal-body" contenteditable="true" style="width: 100%; min-height: 150px; background: #2a2a2a; border: 1px solid #444; border-radius: 4px; padding: 10px; color: white; outline: none; font-size: 14px;"></div>
+            </div>
+            <button id="btn-save-edit" style="width: 100%; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Save Changes</button>
+        </div>
+    </div>
+
+    <div id="card-context-menu" class="context-menu" style="display: none;">
+        <div class="menu-item" id="menu-open">Open</div>
+        <div class="menu-item" id="menu-edit">Edit</div>
+        <div class="menu-item" id="menu-rescan">Rescan</div>
+        <div class="menu-item has-submenu" id="menu-group">
+            Add to Group &raquo;
+            <div id="group-submenu" class="submenu"></div>
+        </div>
+        <div class="menu-item" id="menu-close">Close</div>
+    </div>
+
+    <script src="mindmap.js"></script>
+</body>
+</html>
