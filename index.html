@@ -29,7 +29,18 @@
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
-<body>
+<body class="unlicensed">
+
+    <div class="unlicensed-overlay">
+        <div class="unlicensed-card">
+            <div class="unlicensed-icon">🔒</div>
+            <div class="unlicensed-title">Commercial Version Registration</div>
+            <div class="unlicensed-desc">
+                XenoScript is currently unlicensed. To unlock the full commercial version, please enter your registration key.
+            </div>
+            <button class="unlicensed-btn" id="btn-unlicensed-activate">Enter Registration Key</button>
+        </div>
+    </div>
 
     <div class="top-menubar">
         <div style="font-weight: bold; color: white; margin-right: 20px; display: flex; align-items: center; gap: 8px;">
@@ -186,7 +197,9 @@
                 <div class="dropdown-item" id="help-correction-logs"><span>📝 Correction Logs</span></div>
                 <div class="dropdown-divider"></div>
                 <div class="dropdown-item" id="menu-check-github-updates"><span>🔄 Check for Updates...</span></div>
-                <div class="menu-separator"></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="help-registration"><span>🔑 Registration...</span></div>
+                <div class="dropdown-divider"></div>
                 <div class="dropdown-item" id="help-about"><span>ℹ️ About</span></div>
             </div>
         </div>
@@ -334,6 +347,7 @@
             <span id="syncText">Local Backup Active</span>
         </div>
     </div>
+    </div></div> <!-- Close .editor-area and .main-container -->
 
     <!-- Backup Configuration Modal -->
     <div id="backup-modal" class="modal-overlay" style="display: none;">
@@ -623,12 +637,53 @@
         <div class="modal-content" style="width: 400px; text-align: center;">
             <img src="xenohead_logo.png" alt="XenoHead Logo" style="width: 120px; height: 120px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
             <h2 style="margin: 0; font-family: 'Outfit', sans-serif; color: #f8fafc;">XenoScript</h2>
-            <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 5px;">Version <span id="about-version">6.2.0</span></p>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 5px;">Version <span id="about-version">7.0.2</span></p>
             <div style="margin: 20px 0; padding: 15px; background: #131a2c; border-radius: 8px; border: 1px solid #2d3748;">
                 <p style="margin: 0; color: #e2e8f0; font-weight: bold;">Built by XenoHead</p>
                 <a href="#" onclick="window.pywebview ? window.pywebview.api.open_url('https://www.xenohead.com') : window.open('https://www.xenohead.com','_blank')" style="color: #1b8adb; text-decoration: none; font-size: 0.9rem; display: block; margin-top: 5px;">www.xenohead.com</a>
             </div>
             <button id="btn-close-about" class="modal-btn" style="background-color: #4a5568; width: 100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="registration-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 420px; background: #1a222c; border: 1px solid #36424e; border-radius: 12px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.6);">
+            <h2 style="margin: 0 0 10px 0; font-family: 'Outfit', sans-serif; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+                🔑 Registration
+            </h2>
+            <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 5px; line-height: 1.4;">
+                Please register XenoScript to activate the full commercial version.
+            </p>
+            
+            <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <label style="color: #94a3b8; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px;">
+                        Auth Key (Hardware ID):
+                    </label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="reg-auth-key" readonly style="flex: 1; padding: 10px; background: #131a2c; border: 1px solid #2d3748; color: #e2e8f0; font-family: 'Consolas', monospace; font-size: 0.95rem; border-radius: 6px;" value="XS-XXXX-XXXX-XXXX">
+                        <button id="btn-copy-auth-key" class="modal-btn" style="background: #2d3748; border: 1px solid #4a5568; color: #f1f5f9; padding: 0 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; height: 38px; display: flex; align-items: center; justify-content: center; margin: 0;">Copy</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="color: #94a3b8; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px;">
+                        Registration Key:
+                    </label>
+                    <input type="text" id="reg-license-key" placeholder="XXXX-XXXX-XXXX" style="width: 100%; box-sizing: border-box; padding: 10px; background: #131a2c; border: 1px solid #2d3748; color: #e2e8f0; font-family: 'Consolas', monospace; font-size: 1.05rem; border-radius: 6px; text-transform: uppercase;">
+                </div>
+                
+                <div style="padding: 10px 15px; border-radius: 6px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; background: #2d3748; border: 1px solid #4a5568;" id="reg-status-box">
+                    <span style="color: #94a3b8;">Status:</span>
+                    <span id="reg-status-val" style="font-weight: bold; color: #e2e8f0;">Unlicensed</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button id="btn-activate-license" class="modal-btn" style="background-color: #1b8adb; flex: 1;">Activate</button>
+                <button id="btn-close-registration" class="modal-btn" style="background-color: #4a5568; flex: 1;">Close</button>
+            </div>
         </div>
     </div>
 

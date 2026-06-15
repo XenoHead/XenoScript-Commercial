@@ -12,7 +12,7 @@
 ; ============================================================
 
 #define AppName        "XenoScript"
-#define AppVersion     "6.2.0"
+#define AppVersion     "7.0.2"
 #define AppPublisher   "XenoHead"
 #define AppURL         "https://github.com/XenoHead/XenoScript-Commercial"
 #define AppCopyright   "Copyright (C) 2026 XenoHead"

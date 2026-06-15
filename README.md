@@ -2,7 +2,7 @@
 
 **XenoScript** is a professional screenplay writing application built for Windows. It combines industry-standard formatting with real-time collaboration, AI-assisted writing, and an aggressive backup system — everything a screenwriter needs in one place.
 
-> **Current Version:** 6.2.0 &nbsp;|&nbsp; **Last Updated:** June 14, 2026
+> **Current Version:** 7.0.2 &nbsp;|&nbsp; **Last Updated:** June 14, 2026
 
 ![XenoScript Screenshot](./screenshot.png)
 

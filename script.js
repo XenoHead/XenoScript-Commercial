@@ -3503,6 +3503,139 @@ if (helpAbout) {
     });
 }
 
+// Shared Registration Modal opening logic
+async function openRegistrationModal() {
+    const modal = document.getElementById('registration-modal');
+    const authKeyInput = document.getElementById('reg-auth-key');
+    const licenseKeyInput = document.getElementById('reg-license-key');
+    const statusBox = document.getElementById('reg-status-box');
+    const statusVal = document.getElementById('reg-status-val');
+    
+    if (!window.pywebview) {
+        alert("Registration is only available when running in the compiled application.");
+        return;
+    }
+
+    try {
+        const info = await window.pywebview.api.get_registration_info();
+        if (info) {
+            if (authKeyInput) authKeyInput.value = info.auth_key || '';
+            if (licenseKeyInput) licenseKeyInput.value = info.registration_key || '';
+            
+            if (statusVal && statusBox) {
+                if (info.is_registered) {
+                    statusVal.textContent = "Licensed";
+                    statusVal.style.color = "#4ade80"; // soft green
+                    statusBox.style.borderColor = "#15803d"; // dark green
+                    statusBox.style.backgroundColor = "#14532d";
+                    document.body.classList.remove('unlicensed');
+                } else {
+                    statusVal.textContent = "Unlicensed (Trial Mode)";
+                    statusVal.style.color = "#f87171"; // soft red
+                    statusBox.style.borderColor = "#991b1b"; // dark red
+                    statusBox.style.backgroundColor = "#7f1d1d";
+                    document.body.classList.add('unlicensed');
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Failed to fetch registration info", err);
+    }
+
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+// Registration Modal click handler
+const helpRegistration = document.getElementById('help-registration');
+if (helpRegistration) {
+    helpRegistration.addEventListener('click', openRegistrationModal);
+}
+
+const btnCloseRegistration = document.getElementById('btn-close-registration');
+if (btnCloseRegistration) {
+    btnCloseRegistration.addEventListener('click', () => {
+        const modal = document.getElementById('registration-modal');
+        if (modal) modal.style.display = 'none';
+    });
+}
+
+const btnCopyAuthKey = document.getElementById('btn-copy-auth-key');
+if (btnCopyAuthKey) {
+    btnCopyAuthKey.addEventListener('click', () => {
+        const authKeyInput = document.getElementById('reg-auth-key');
+        if (authKeyInput && authKeyInput.value) {
+            navigator.clipboard.writeText(authKeyInput.value).then(() => {
+                alert("Auth Key copied to clipboard!");
+            }).catch(err => {
+                // Fallback copying method
+                authKeyInput.select();
+                document.execCommand('copy');
+                alert("Auth Key copied to clipboard!");
+            });
+        }
+    });
+}
+
+const btnActivateLicense = document.getElementById('btn-activate-license');
+if (btnActivateLicense) {
+    btnActivateLicense.addEventListener('click', async () => {
+        const licenseKeyInput = document.getElementById('reg-license-key');
+        if (!licenseKeyInput || !licenseKeyInput.value.trim()) {
+            alert("Please enter a registration key.");
+            return;
+        }
+
+        if (!window.pywebview) return;
+
+        try {
+            const result = await window.pywebview.api.activate_registration(licenseKeyInput.value.trim());
+            if (result && result.success) {
+                alert(result.message);
+                const modal = document.getElementById('registration-modal');
+                if (modal) modal.style.display = 'none';
+                
+                // Refresh registration status instantly to unlock the UI
+                await checkRegistrationStartup();
+            } else {
+                alert(result ? result.error : "Failed to activate license.");
+            }
+        } catch (err) {
+            alert("An error occurred during activation: " + err);
+        }
+    });
+}
+
+// Unlicensed Lock Screen Overlay button handler
+const btnUnlicensedActivate = document.getElementById('btn-unlicensed-activate');
+if (btnUnlicensedActivate) {
+    btnUnlicensedActivate.addEventListener('click', openRegistrationModal);
+}
+
+// Check registration status on startup when the backend API is ready
+async function checkRegistrationStartup() {
+    if (!window.pywebview) {
+        // If not in pywebview (e.g. testing in a regular web browser), unlock the app
+        document.body.classList.remove('unlicensed');
+        return;
+    }
+    try {
+        const info = await window.pywebview.api.get_registration_info();
+        if (info && info.is_registered) {
+            document.body.classList.remove('unlicensed');
+        } else {
+            document.body.classList.add('unlicensed');
+        }
+    } catch (err) {
+        console.error("Error checking registration on startup:", err);
+        document.body.classList.add('unlicensed');
+    }
+}
+
+// Listen for the pywebview ready event to run the registration check
+window.addEventListener('pywebviewready', checkRegistrationStartup);
+
 if (btnCloseCorrectionLogs) {
     btnCloseCorrectionLogs.addEventListener('click', () => correctionLogsModal.style.display = 'none');
 }

@@ -954,12 +954,41 @@ class DeveloperHubApp:
                 self.root.after(0, lambda: self.log(f"   ❌ API Error getting branch ref: {r_ref.status_code} - {r_ref.text}"))
                 return False
 
+            remote_files = {}
+            if base_tree_sha:
+                self.root.after(0, lambda: self.log("   Fetching remote repository file tree..."))
+                tree_rec_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{base_tree_sha}?recursive=1"
+                r_tree_rec = requests.get(tree_rec_url, headers=headers)
+                if r_tree_rec.status_code == 200:
+                    remote_files = {
+                        node["path"]: node["sha"]
+                        for node in r_tree_rec.json().get("tree", [])
+                        if node["type"] == "blob"
+                    }
+                    self.root.after(0, lambda: self.log(f"   Remote tree loaded: {len(remote_files)} files."))
+                else:
+                    self.root.after(0, lambda: self.log(f"   ⚠️ Warning: Failed to fetch remote tree: {r_tree_rec.status_code}"))
+
             tree_nodes = []
             for rel_path, abs_path in self.emulated_staged_files.items():
-                self.root.after(0, lambda r=rel_path: self.log(f"   Uploading blob for {r}..."))
-                
                 with open(abs_path, "rb") as f:
                     content_bytes = f.read()
+                
+                # Calculate local git sha1
+                import hashlib
+                local_sha = hashlib.sha1(f"blob {len(content_bytes)}\x00".encode("utf-8") + content_bytes).hexdigest()
+                
+                if rel_path in remote_files and remote_files[rel_path] == local_sha:
+                    # File is identical on remote, skip uploading blob!
+                    tree_nodes.append({
+                        "path": rel_path,
+                        "mode": "100644",
+                        "type": "blob",
+                        "sha": local_sha
+                    })
+                    continue
+
+                self.root.after(0, lambda r=rel_path: self.log(f"   Uploading blob for {r}..."))
                 
                 content_base64 = base64.b64encode(content_bytes).decode("utf-8")
                 

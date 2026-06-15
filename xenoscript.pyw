@@ -141,6 +141,192 @@ class BackendAPI:
         os.environ["GEMINI_API_KEY"] = api_key
         return True
 
+    def get_hardware_id(self):
+        try:
+            import uuid
+            import hashlib
+            node = uuid.getnode()
+            hw_hash = hashlib.sha256(str(node).encode()).hexdigest().upper()
+            return f"XS-{hw_hash[:4]}-{hw_hash[4:8]}-{hw_hash[8:12]}"
+        except Exception:
+            return "XS-TEMP-AUTH-KEY"
+
+    def encrypt_license_data(self, data_str):
+        try:
+            key = f"XENOSCRIPT-LICENSING-KEY-{self.get_hardware_id()}"
+            key_bytes = key.encode("utf-8")
+            data_bytes = data_str.encode("utf-8")
+            encrypted = bytearray()
+            for i in range(len(data_bytes)):
+                encrypted.append(data_bytes[i] ^ key_bytes[i % len(key_bytes)])
+            return bytes(encrypted)
+        except Exception:
+            return b""
+
+    def decrypt_license_data(self, encrypted_bytes):
+        try:
+            key = f"XENOSCRIPT-LICENSING-KEY-{self.get_hardware_id()}"
+            key_bytes = key.encode("utf-8")
+            decrypted = bytearray()
+            for i in range(len(encrypted_bytes)):
+                decrypted.append(encrypted_bytes[i] ^ key_bytes[i % len(key_bytes)])
+            return decrypted.decode("utf-8")
+        except Exception:
+            return ""
+
+    def check_license_status(self):
+        try:
+            license_path = os.path.join(os.path.dirname(self.settings_file), "license.dat")
+            if not os.path.exists(license_path):
+                return False
+                
+            with open(license_path, "rb") as f:
+                encrypted_data = f.read()
+                
+            decrypted_str = self.decrypt_license_data(encrypted_data)
+            if not decrypted_str:
+                return False
+                
+            license_info = json.loads(decrypted_str)
+            reg_key = license_info.get("regkey", "")
+            auth_key = license_info.get("authkey", "")
+            
+            if not self.validate_registration_key(reg_key):
+                return False
+                
+            hw_id = self.get_hardware_id()
+            expected_auth_key = f"{reg_key}-{hw_id}"
+            
+            return auth_key == expected_auth_key
+        except Exception:
+            return False
+
+    def validate_registration_key(self, key_str):
+        try:
+            parts = key_str.upper().strip().split("-")
+            if len(parts) != 3:
+                return False
+            seg1, seg2, seg3 = parts
+            if len(seg1) != 4 or len(seg2) != 4 or len(seg3) != 4:
+                return False
+                
+            L = [seg1[0], seg1[2], seg2[0], seg2[2]]
+            D = [int(seg1[1]), int(seg1[3]), int(seg2[1]), int(seg2[3])]
+            
+            for char in L:
+                if not (char.isalpha() and char.isupper()):
+                    return False
+                    
+            val_L = [ord(char) - ord('A') for char in L]
+            
+            expected_L4_val = (val_L[0] * 3 + val_L[1] * 7 + val_L[2] * 11 + val_L[3] * 13) % 26
+            expected_L4 = chr(expected_L4_val + ord('A'))
+            
+            expected_D4 = (D[0] * 3 + D[1] * 7 + D[2] * 2 + D[3] * 5) % 10
+            
+            expected_L5_val = (val_L[0] * 17 + val_L[1] * 19 + val_L[2] * 23 + val_L[3] * 29) % 26
+            expected_L5 = chr(expected_L5_val + ord('A'))
+            
+            expected_D5 = (D[0] * 7 + D[1] * 9 + D[2] * 3 + D[3] * 1) % 10
+            
+            return (seg3[0] == expected_L4 and 
+                    int(seg3[1]) == expected_D4 and 
+                    seg3[2] == expected_L5 and 
+                    int(seg3[3]) == expected_D5)
+        except Exception:
+            return False
+
+    def get_registration_info(self):
+        settings = self.load_settings()
+        current_key = settings.get("registrationKey", "")
+        is_registered = self.check_license_status()
+        hw_id = self.get_hardware_id()
+        auth_key = f"{current_key}-{hw_id}" if current_key else hw_id
+        return {
+            "auth_key": auth_key,
+            "registration_key": current_key,
+            "is_registered": is_registered
+        }
+
+    def activate_registration(self, license_key):
+        global active_window
+        license_key = license_key.upper().strip()
+        is_valid = self.validate_registration_key(license_key)
+        if not is_valid:
+            return {"success": False, "error": "Invalid registration key format. Please check the key and try again."}
+            
+        hw_id = self.get_hardware_id()
+        auth_key = f"{license_key}-{hw_id}"
+        
+        # Prepare request to Cloudflare Worker
+        import urllib.request
+        import urllib.error
+        
+        settings = self.load_settings()
+        worker_url = settings.get("licensingWorkerUrl", "https://licensing-worker.xenohead.workers.dev")
+        if not worker_url.endswith("/activate"):
+            worker_url = worker_url.rstrip("/") + "/activate"
+            
+        payload = json.dumps({
+            "regkey": license_key,
+            "authkey": auth_key
+        }).encode("utf-8")
+        
+        req = urllib.request.Request(
+            worker_url,
+            data=payload,
+            headers={"Content-Type": "application/json", "User-Agent": "XenoScript-Client/1.0"},
+            method="POST"
+        )
+        
+        try:
+            with urllib.request.urlopen(req, timeout=10) as response:
+                resp_data = response.read().decode("utf-8")
+                resp_json = json.loads(resp_data)
+                
+                if resp_json.get("success"):
+                    settings["registrationKey"] = license_key
+                    self.save_settings(settings)
+                    
+                    license_info = {
+                        "regkey": license_key,
+                        "authkey": auth_key,
+                        "date_activated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    license_str = json.dumps(license_info)
+                    encrypted_data = self.encrypt_license_data(license_str)
+                    
+                    license_path = os.path.join(os.path.dirname(self.settings_file), "license.dat")
+                    with open(license_path, "wb") as f:
+                        f.write(encrypted_data)
+                        
+                    try:
+                        version_info = self.get_version_info()
+                        version_str = version_info.get("version", "6.2.0")
+                        if active_window:
+                            active_window.title = f"XenoScript {version_str}"
+                    except Exception:
+                        pass
+                        
+                    return {"success": True, "message": "Activation successful! Thank you for registering."}
+                else:
+                    return {"success": False, "error": resp_json.get("error", "Activation failed.")}
+                    
+        except urllib.error.HTTPError as e:
+            try:
+                err_resp = e.read().decode("utf-8")
+                err_json = json.loads(err_resp)
+                error_msg = err_json.get("error", f"HTTP Error {e.code}")
+            except Exception:
+                error_msg = f"HTTP Error {e.code}: {e.reason}"
+            return {"success": False, "error": error_msg}
+            
+        except urllib.error.URLError as e:
+            return {"success": False, "error": f"Network error: {e.reason}. Please check your internet connection."}
+            
+        except Exception as e:
+            return {"success": False, "error": f"An unexpected error occurred: {str(e)}"}
+
     def _safe_save_dialog(self, default_name, ext, filetypes):
         safe_name = "".join(c for c in default_name if c not in r'\/:*?"<>|')
         ft_str = str(filetypes)
@@ -1050,7 +1236,7 @@ print(file)
 
     # Default version info bundled with the app (used for first-install seeding)
     DEFAULT_VERSION = {
-        "version": "6.2.0",
+        "version": "7.0.2",
         "last_updated": "2026-06-14",
         "changelog": [
             "Added prompt confirmation before overwriting with cloud version."
@@ -1443,7 +1629,10 @@ if __name__ == '__main__':
         version_info = api.get_version_info()
         version_str = version_info.get("version", "2.5")
         
-        active_window = webview.create_window(f'XenoScript {version_str}', url=html_path, js_api=api, width=1280, height=800)
+        is_registered = api.check_license_status()
+        title_suffix = "" if is_registered else " (UNLICENSED)"
+        
+        active_window = webview.create_window(f'XenoScript {version_str}{title_suffix}', url=html_path, js_api=api, width=1280, height=800)
 
         icon_filename = 'movie-icon.ico' if os.name == 'nt' else 'movie-icon.png'
         icon_path = os.path.join(current_dir, icon_filename)
